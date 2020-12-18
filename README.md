@@ -40,6 +40,9 @@ Need to add this
  ```
  Middleware in the $middleware variables on Kernel.php file
 
+ Add ```.version``` and ```.app_installed``` on your ```storage/app``` folder.
+
+ On your ```.version``` file write your app version. And ```.app_installed``` keep it empty
 
 
 ## Credits

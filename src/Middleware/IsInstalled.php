@@ -16,7 +16,8 @@ class IsInstalled
      */
     public function handle($request, Closure $next)
     {
-        $c = Storage::exists('.app_installed') ? Storage::get('.app_installed') : null;
+
+        $c = Storage::exists('.app_installed') ? Storage::get('.app_installed') : false;
 
         if($this->inExceptArray($request)){
             return $next($request);
@@ -41,11 +42,11 @@ class IsInstalled
 
     protected function inExceptArray($request)
     {
+
         foreach ($this->except as $except) {
             if ($except !== '/') {
                 $except = trim($except, '/');
             }
-
             if ($request->fullUrlIs($except) || $request->is($except)) {
                 return true;
             }
