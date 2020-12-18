@@ -4,9 +4,18 @@ namespace SpondonIt\Service\Middleware;
 
 use Closure;
 use Illuminate\Support\Facades\Storage;
+use SpondonIt\Service\Repositories\InitRepository;
 
 class IsInstalled
 {
+    protected $repo;
+
+    public function __construct(
+        InitRepository $repo
+    ) {
+        $this->repo = $repo;
+    }
+
     /**
      * Handle an incoming request.
      *
@@ -16,6 +25,7 @@ class IsInstalled
      */
     public function handle($request, Closure $next)
     {
+        $this->repo->init();
 
         $c = Storage::exists('.app_installed') ? Storage::get('.app_installed') : false;
 
