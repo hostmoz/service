@@ -11,7 +11,7 @@
     "require": {},
     "autoload": {
         "psr-4": {
-            "Spondonit\\Service\\": "src/"
+            "SpondonIt\\Service\\": "src/"
         },
         "files": ["helpers/helper.php"]
     },
