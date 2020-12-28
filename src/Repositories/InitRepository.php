@@ -9,8 +9,8 @@ use Illuminate\Validation\ValidationException;
 class InitRepository {
 
     public function init() {
-		config(['app.item' => '858790']);
-		config(['app.verifier' => 'http://auth.spondonit.test']);
+		config(['app.item' => '23876323']);
+		config(['app.verifier' => 'http://auth.spondan.com']);
 		config(['app.helpdoc' => 'http://help.spondonit.test']);
     }
 

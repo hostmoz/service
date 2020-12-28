@@ -107,22 +107,21 @@ class InstallRepository {
 
     public function validateLicense($params)
     {
-        $this->checkLicense();
-
-    }
-
-    public function checkLicense() {
-		if (isTestMode()) {
+        if (isTestMode()) {
 			return;
 		}
 
 		if (!isConnected()) {
 			return;
         }
-        // $url = config('app.verifier') . '/api/cc?a=install&u=' . url()->current() . '&ac=' . request('access_code') . '&i=' . config('app.item') . '&e=' . request('envato_email');
-        // $response = curlIt($url);
+      
+       $url = config('app.verifier') . '/api/cc?a=install&u=' . url()->current() . '&ac=' . request('access_code') . '&i=' . config('app.item') . '&e=' . request('envato_email');
+   
+        
+        $response = curlIt($url);
 
-		$response = ['status' => 'verified', 'checksum' => 'tariqul', 'message' => 'Congratulation'];
+
+		// $response = ['status' => true, 'checksum' => 'tariqul', 'message' => 'Congratulation'];
 
 		$status = (isset($response['status']) && $response['status']) ? 1 : 0;
 
@@ -138,6 +137,44 @@ class InstallRepository {
         Storage::put('.account_email', request('envato_email'));
 
         return true;
+
+    }
+
+    public function checkLicense() {
+		if (isTestMode()) {
+			return;
+		}
+
+		// if (Storage::exists('.access_log') && Storage::get('.access_log') == date('Y-m-d')) {
+		// 	return true;
+		// }
+
+		if (!isConnected()) {
+			return;
+		}
+
+		$ac = Storage::exists('.access_code') ? Storage::get('.access_code') : null;
+		$e = Storage::exists('.account_email') ? Storage::get('.account_email') : null;
+		$c = Storage::exists('.app_installed') ? Storage::get('.app_installed') : null;
+		$v = Storage::exists('.version') ? Storage::get('.version') : null;
+
+
+
+		$url = config('app.verifier') . '/api/cc?a=verify&u=' . url()->current() . '&ac=' . $ac . '&i=' . config('app.item') . '&e=' . $e . '&c=' . $c . '&v=' . $v;
+		$response = curlIt($url);
+
+
+
+		$status = $response['status'];
+
+		if (!$status) {
+			Storage::delete(['.access_code', '.account_email']);
+			Storage::put('.app_installed', '');
+			return false;
+		} else {
+			Storage::put('.access_log', date('Y-m-d'));
+			return true;
+		}
     }
 
 
