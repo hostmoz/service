@@ -10,8 +10,8 @@ class InitRepository {
 
     public function init() {
 		config(['app.item' => '23876323']);
-		config(['app.verifier' => 'http://auth.spondan.com']);
-		config(['app.helpdoc' => 'http://help.spondonit.test']);
+		config(['app.verifier' => 'http://auth.uxseven.com']);
+		config(['app.helpdoc' => 'http://help.uxseven.test']);
     }
 
     public function check() {
