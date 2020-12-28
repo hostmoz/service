@@ -9,7 +9,7 @@ use Illuminate\Validation\ValidationException;
 class InitRepository {
 
     public function init() {
-		config(['app.item' => '23876323']);
+		config(['app.item' => '']);
 		config(['app.verifier' => 'http://auth.uxseven.com']);
 		config(['app.helpdoc' => 'http://help.uxseven.test']);
     }
