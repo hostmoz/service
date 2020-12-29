@@ -14,6 +14,15 @@ class InitRepository {
 		config(['app.helpdoc' => 'http://help.uxseven.test']);
     }
 
+    public function config()
+	{
+		$config = collect();
+
+		// write your code here which need to load berfore request
+
+		return $config;
+	}
+
     public function check() {
 		if (isTestMode()) {
 			return;
@@ -123,15 +132,6 @@ class InitRepository {
 		$response = curlIt($url);
 
 		return isset($response['content']) ? $response['content'] : 'No content found.';
-	}
-
-	public function config()
-	{
-		$config = collect();
-
-		// write your code here which need to load berfore request
-
-		return $config;
 	}
 
 }
