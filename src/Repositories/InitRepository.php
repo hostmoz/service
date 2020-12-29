@@ -125,5 +125,13 @@ class InitRepository {
 		return isset($response['content']) ? $response['content'] : 'No content found.';
 	}
 
+	public function config()
+	{
+		$config = collect();
+
+		// write your code here which need to load berfore request
+
+		return $config;
+	}
 
 }

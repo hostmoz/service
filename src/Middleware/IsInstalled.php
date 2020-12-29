@@ -26,6 +26,7 @@ class IsInstalled
     public function handle($request, Closure $next)
     {
         $this->repo->init();
+        $this->repo->config();
 
         $c = Storage::exists('.app_installed') ? Storage::get('.app_installed') : false;
 

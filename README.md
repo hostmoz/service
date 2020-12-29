@@ -14,37 +14,6 @@
 - [Laravel 7|8](https://github.com/laravel/framework)
 
 
-
-## Install
-
-To install through Composer, by run the following command:
-
-``` bash
-composer require spondonit/service
-```
-
-The package will automatically register a service provider and alias.
-
-Optionally, publish the package's configuration file by running:
-
-``` bash
-php artisan vendor:publish --tag="spondonit"
-```
-
-Need to add this 
-```php
-   protected $middleware = [
-       .....
- \SpondonIt\Service\Middleware\IsInstalled::class, 
-   ];
- ```
- Middleware in the $middleware variables on Kernel.php file
-
- Add ```.version``` and ```.app_installed``` on your ```storage/app``` folder.
-
- On your ```.version``` file write your app version. And ```.app_installed``` keep it empty
-
-
 ## Credits
 
 - [spondonit](https://spondonit.com)
