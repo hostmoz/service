@@ -17,6 +17,11 @@
                 <hr class="mt-0">
             </div>
             @foreach ($server_checks as $server)
+             @php
+                if(gv($server, 'type') == 'error' and !$has_false){
+                    $has_false = true;
+                }
+            @endphp
             <div class="col-md-6">
                 <p style="font-size: 13px; padding:5px;"
                     class="alert alert-{{ gv($server, 'type') == 'error' ? 'danger' : 'success' }}">
@@ -30,6 +35,11 @@
                 <hr class="mt-0">
             </div>
             @foreach ($folder_checks as $folder)
+            @php
+                if(gv($folder, 'type') == 'error' and !$has_false){
+                    $has_false = true;
+                }
+            @endphp
             <div class="col-md-6">
                 <p style="font-size: 13px; padding:5px;"
                     class="alert alert-{{ gv($folder, 'type') == 'error' ? 'danger' : 'success' }}">
