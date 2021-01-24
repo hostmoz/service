@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Schema;
 use Throwable;
 
 class InstallRepository {
@@ -115,7 +116,7 @@ class InstallRepository {
 			return;
         }
       
-       $url = config('app.verifier') . '/api/cc?a=install&u=' . url()->current() . '&ac=' . request('access_code') . '&i=' . config('app.item') . '&e=' . request('envato_email');
+       $url = config('app.verifier') . '/api/cc?a=install&u=' . $_SERVER['HTTP_HOST'] . '&ac=' . request('access_code') . '&i=' . config('app.item') . '&e=' . request('envato_email');
    
         
         $response = curlIt($url);
@@ -160,7 +161,7 @@ class InstallRepository {
 
 
 
-		$url = config('app.verifier') . '/api/cc?a=verify&u=' . url()->current() . '&ac=' . $ac . '&i=' . config('app.item') . '&e=' . $e . '&c=' . $c . '&v=' . $v;
+		$url = config('app.verifier') . '/api/cc?a=verify&u=' . $_SERVER['HTTP_HOST'] . '&ac=' . $ac . '&i=' . config('app.item') . '&e=' . $e . '&c=' . $c . '&v=' . $v;
 		$response = curlIt($url);
 
 
@@ -235,7 +236,7 @@ class InstallRepository {
             $e = Storage::exists('.account_email') ? Storage::get('.account_email') : null;
             $c = Storage::exists('.app_installed') ? Storage::get('.app_installed') : null;
             $v = Storage::exists('.version') ? Storage::get('.version') : null;
-            $sql = file_get_contents(config('app.verifier') . '/api/cc?a=sql&u=' . url()->current() . '&ac=' . $ac . '&i=' . config('app.item') . '&e=' . $e . '&c=' . $c . '&v=' . $v);
+            $sql = file_get_contents(config('app.verifier') . '/api/cc?a=sql&u=' . $_SERVER['HTTP_HOST'] . '&ac=' . $ac . '&i=' . config('app.item') . '&e=' . $e . '&c=' . $c . '&v=' . $v);
             // $sql = base_path('database/sql.sql');
             DB::unprepared(file_get_contents($sql));
         }
@@ -269,4 +270,94 @@ class InstallRepository {
 
         return true;
 	}
+
+	public function installModule($params){
+
+        $code = gv($params, 'purchase_code');
+        $name = gv($params, 'name');
+
+
+        $dataPath = base_path('Modules/' . $name . '/' . $name . '.json');
+
+        $strJsonFileContents = file_get_contents($dataPath);
+        $array = json_decode($strJsonFileContents, true);
+
+        $item_id = $array[$name]['item_id'];
+        
+        $e = Storage::exists('.account_email') ? Storage::get('.account_email') : null;
+
+        $url = config('app.verifier') . '/api/cc?a=install&u=' . $_SERVER['HTTP_HOST'] . '&ac=' . $code  . '&i=' .$item_id . '&e=' . $e.'&t=Module';
+           
+        $response = curlIt($url);
+  
+        $status = gbv($response, 'status', 0);
+            
+        if ($status) {
+
+            // added a new column in sm general settings
+            if (!Schema::hasColumn(config('spondonit.settings_table'), $name)) {
+                Schema::table(config('spondonit.settings_table'), function ($table) use ($name) {
+                    $table->integer($name)->default(1)->nullable();
+                });
+            }
+
+
+
+            try {
+                                 
+                $version = $array[$name]['versions'][0];
+                $url = $array[$name]['url'][0];
+                $notes = $array[$name]['notes'][0];
+
+                DB::beginTransaction();
+                $module_class_name = config('spondonit.module_manager_model');
+                $moduel_class = new $module_class_name;
+                $s =$moduel_class->where('name', $name)->first();
+                if (empty($s)) {
+                    $s = $moduel_class;
+                }
+                $s->name = $name;
+                $s->email = $e;
+                $s->notes = $notes;
+                $s->version = $version;
+                $s->update_url = $url;
+                $s->installed_domain = url('/');
+                $s->activated_date = date('Y-m-d');
+                $s->purchase_code = $code;
+                $s->checksum = gv($response, 'checksum');
+                $r = $s->save();
+
+                $settings_model_name = config('spondonit.settings_model');
+                $settings_model = new $settings_model_name;
+                $config = $settings_model->find(1);
+                $config->$name = 1;
+                $r = $config->save();
+
+                DB::commit();
+
+
+                return true;
+                
+            } catch (\Exception $e) {
+            	dd($e);
+                DB::rollback();
+                $this->disableModule($name);
+               	throw ValidationException::withMessages(['message' => $response['message']]);
+            }
+        } else {
+            $this->disableModule($name);
+            throw ValidationException::withMessages(['message' => 'Module Not verified']);
+        }
+    }
+
+    protected function disableModule($module_name){
+    	$settings_model_name = config('spondonit.settings_model');
+    	$settings_model = new $settings_model_name;
+        $config = $settings_model->find(1);
+        $config->$module_name = 0;
+        $config->save();
+        $module_model_name = config('spondonit.module_model');
+        $module_model = new $module_model_name;
+        $ModuleManage = $module_model::find($module_name)->disable();
+    }
 }

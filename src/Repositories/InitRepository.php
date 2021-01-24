@@ -10,7 +10,7 @@ class InitRepository {
 
     public function init() {
 		config(['app.item' => '']);
-		config(['app.verifier' => 'http://auth.uxseven.com']);
+		config(['app.verifier' => 'http://auth.spondonit.test']);
 		config(['app.helpdoc' => 'http://help.uxseven.test']);
     }
 
@@ -133,5 +133,8 @@ class InitRepository {
 
 		return isset($response['content']) ? $response['content'] : 'No content found.';
 	}
+
+
+
 
 }

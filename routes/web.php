@@ -20,6 +20,8 @@ Route::group(['namespace' => 'SpondonIt\Service\Controllers', 'middleware' => 'w
     Route::post('/update', 'UpdateController@update');
     Route::post('/download', 'UpdateController@download')->name('service.delete');
 
+    Route::post('/install-adons', 'InstallController@ManageAddOnsValidation')->name('ManageAddOnsValidation');
+
     /* Route::get('/install/pre-requisite', 'InstallController@preRequisite');
 
     Route::post('/install/validate/{option}', 'InstallController@store');

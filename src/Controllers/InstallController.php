@@ -10,6 +10,7 @@ use SpondonIt\Service\Repositories\InstallRepository;
 use SpondonIt\Service\Requests\DatabaseRequest;
 use SpondonIt\Service\Requests\LicenseRequest;
 use SpondonIt\Service\Requests\UserRequest;
+use SpondonIt\Service\Requests\ModuleInstallRequest;
 
 class InstallController extends Controller{
     protected $repo, $request;
@@ -79,6 +80,12 @@ class InstallController extends Controller{
 
     public function done(){
 		return view('service::install.done');
+    }
+
+     public function ManageAddOnsValidation(ModuleInstallRequest $request)
+    {
+        $response = $this->repo->installModule($request->all());
+        return response()->json(['message' => __('service::install.module_verify'), 'reload' => '']);
     }
 
 
