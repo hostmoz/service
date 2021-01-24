@@ -28,7 +28,7 @@ class ModuleInstallRequest extends FormRequest
 
         $rules = [
             'purchase_code'     => 'required',
-            'name'     => 'required',
+            'name'               => 'required',
 
         ];
 

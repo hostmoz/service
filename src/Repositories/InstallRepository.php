@@ -160,11 +160,8 @@ class InstallRepository {
 		$v = Storage::exists('.version') ? Storage::get('.version') : null;
 
 
-
 		$url = config('app.verifier') . '/api/cc?a=verify&u=' . $_SERVER['HTTP_HOST'] . '&ac=' . $ac . '&i=' . config('app.item') . '&e=' . $e . '&c=' . $c . '&v=' . $v;
 		$response = curlIt($url);
-
-
 
 		$status = $response['status'];
 
@@ -232,12 +229,12 @@ class InstallRepository {
         try {
             Artisan::call('migrate', array('--force' => true));
         } catch (Throwable $e) {
-            $ac = Storage::exists('.access_code') ? Storage::get('.access_code') : null;
+            /*$ac = Storage::exists('.access_code') ? Storage::get('.access_code') : null;
             $e = Storage::exists('.account_email') ? Storage::get('.account_email') : null;
             $c = Storage::exists('.app_installed') ? Storage::get('.app_installed') : null;
             $v = Storage::exists('.version') ? Storage::get('.version') : null;
-            $sql = file_get_contents(config('app.verifier') . '/api/cc?a=sql&u=' . $_SERVER['HTTP_HOST'] . '&ac=' . $ac . '&i=' . config('app.item') . '&e=' . $e . '&c=' . $c . '&v=' . $v);
-            // $sql = base_path('database/sql.sql');
+            $sql = file_get_contents(config('app.verifier') . '/api/cc?a=sql&u=' . $_SERVER['HTTP_HOST'] . '&ac=' . $ac . '&i=' . config('app.item') . '&e=' . $e . '&c=' . $c . '&v=' . $v);*/
+            $sql = base_path('database/'+config('spondonit.database_file'));
             DB::unprepared(file_get_contents($sql));
         }
 	}
@@ -289,7 +286,8 @@ class InstallRepository {
         $url = config('app.verifier') . '/api/cc?a=install&u=' . $_SERVER['HTTP_HOST'] . '&ac=' . $code  . '&i=' .$item_id . '&e=' . $e.'&t=Module';
            
         $response = curlIt($url);
-  
+
+  		
         $status = gbv($response, 'status', 0);
             
         if ($status) {
@@ -339,14 +337,13 @@ class InstallRepository {
                 return true;
                 
             } catch (\Exception $e) {
-            	dd($e);
                 DB::rollback();
                 $this->disableModule($name);
-               	throw ValidationException::withMessages(['message' => $response['message']]);
+               	throw ValidationException::withMessages(['message' => $e->getMessage()]);
             }
         } else {
             $this->disableModule($name);
-            throw ValidationException::withMessages(['message' => 'Module Not verified']);
+           	throw ValidationException::withMessages(['message' => $response['message']]);
         }
     }
 

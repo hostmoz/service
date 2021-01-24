@@ -6,5 +6,6 @@ return [
 
 	'settings_model' => App\Models\SmGeneralSettings::class,
 	'module_model' => Nwidart\Modules\Facades\Module::class,
-	'settings_table' => 'sm_general_settings'
+	'settings_table' => 'sm_general_settings',
+	'database_file' => '',
 ];

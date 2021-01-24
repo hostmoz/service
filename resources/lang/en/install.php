@@ -69,5 +69,6 @@ return array(
 "welcome_description" => "Thank you for choosing InfixBio for online course management. Please follow the steps to complete Infix Edu installation!",
 "welcome_title" => "Welcome To Spondonit",
 "zip_file_corrupted" => "Zip file is corrupted. Please download again.",
-"module_verify" => "Module Verified Successfully"
+"module_verify" => "Module Verified Successfully",
+"purchase_code" => 'Purchase Code'
 );

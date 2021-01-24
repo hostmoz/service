@@ -22,10 +22,18 @@ class InstallController extends Controller{
     }
 
     public function index(){
+        $ac = Storage::exists('.app_installed') ? Storage::get('.app_installed') : null;
+        if($ac){
+            return redirect('/')->send();
+        }
         return view('service::install.welcome');
     }
 
     public function preRequisite(){
+        $ac = Storage::exists('.app_installed') ? Storage::get('.app_installed') : null;
+        if($ac){
+            return redirect('/')->send();
+        }
         $checks = $this->repo->getPreRequisite();
 		$server_checks = $checks['server'];
 		$folder_checks = $checks['folder'];
@@ -85,7 +93,7 @@ class InstallController extends Controller{
      public function ManageAddOnsValidation(ModuleInstallRequest $request)
     {
         $response = $this->repo->installModule($request->all());
-        return response()->json(['message' => __('service::install.module_verify'), 'reload' => '']);
+        return response()->json(['message' => __('service::install.module_verify'), 'reload' => true]);
     }
 
 
