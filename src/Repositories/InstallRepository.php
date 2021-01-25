@@ -186,6 +186,8 @@ class InstallRepository {
 
 		$this->seed(gbv($params, 'seed'));
 
+		$this->postInstallScript();
+
 		File::cleanDirectory('storage/app/public');
 		Artisan::call('storage:link');
         envu([
@@ -194,6 +196,10 @@ class InstallRepository {
             ]);
 
         Artisan::call('key:generate');
+	}
+
+	public function postInstallScript(){
+		//write your post install script here
 	}
 
 	/**
