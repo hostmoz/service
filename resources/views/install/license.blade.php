@@ -23,9 +23,9 @@
                         <input type="email" class="form-control" name="envato_email" id="envato_email" required="required" placeholder="{{ __('service::install.envato_email') }}" >
                     </div>
 
-                    <p class="text-center">
+                   {{--  <p class="text-center">
                         <a href={{ config('app.verifier') }} class="">{{ __('service::install.get_access_code')}}</a>
-                    </p>
+                    </p> --}}
 
                    <button type="submit" class="offset-3 col-sm-6 primary-btn fix-gr-bg mt-40 submit" style="background-color: rebeccapurple;color: whitesmoke">{{ __('service::install.lets_go_next') }}</button>
                    <button type="button" class="offset-3 col-sm-6 primary-btn fix-gr-bg mt-40 submitting" disabled style="background-color: rebeccapurple;color: whitesmoke; display:none">{{ __('service::install.submitting') }}</button>
