@@ -343,7 +343,7 @@ class InstallRepository {
             }
         } else {
             $this->disableModule($name);
-           	throw ValidationException::withMessages(['message' => $response['message']]);
+           	throw ValidationException::withMessages(['message' => gv($response, 'message', 'Something is not right')]);
         }
     }
 
