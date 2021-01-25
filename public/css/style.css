@@ -7558,3 +7558,8 @@ html .ui-button.ui-state-disabled:active {
 .full-select.nice-select.open .list {
     width: 100%;
 }
+
+
+input::placeholder {
+    top: 0 !important;
+}

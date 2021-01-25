@@ -82,6 +82,10 @@ function _formValidation(form_id = 'content_form', modal = false, modal_id = 'co
                     window.location.href = data.goto;
                 }
 
+                if (data.reload) {
+                    window.location.href = '';
+                }
+
                 form.find('.submit').show();
                 form.find('.submitting').hide();
 
