@@ -134,8 +134,6 @@ class InstallRepository {
 
         $this->setDBEnv($params);
 
-        $this->migrateDB();
-
 		return true;
     }
 
@@ -153,9 +151,6 @@ class InstallRepository {
    
         
         $response = curlIt($url);
-
-
-		// $response = ['status' => true, 'checksum' => 'tariqul', 'message' => 'Congratulation'];
 
 		$status = (isset($response['status']) && $response['status']) ? 1 : 0;
 
@@ -178,10 +173,6 @@ class InstallRepository {
 		if (isTestMode()) {
 			return;
 		}
-
-		// if (Storage::exists('.access_log') && Storage::get('.access_log') == date('Y-m-d')) {
-		// 	return true;
-		// }
 
 		if (!isConnected()) {
 			return;
