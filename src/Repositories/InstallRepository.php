@@ -1,10 +1,10 @@
 <?php
 namespace SpondonIt\Service\Repositories;
-ini_set('max_execution_time', 0);
+ini_set('max_execution_time', -1);
 
-use App\Models\User;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Contracts\Session\Session;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -43,6 +43,39 @@ class InstallRepository {
 		} else {
 			return array('type' => 'error', 'message' => $help);
 		}
+	}
+
+
+	/**
+	 * Used to check whether pre requisites are fulfilled or not and returns array of success/error type with message
+	 */
+	public function checkPreviousInstallation() {
+
+
+		if( Schema::hasTable('sm_general_settings') && Schema::hasTable('users')){
+	        $settings_model_name = config('spondonit.settings_model');
+	         $settings_model = new $settings_model_name;
+	        $config = $settings_model->find(1);
+	        $url = config('app.verifier') . '/api/cc?a=install&u=' . $_SERVER['HTTP_HOST'] . '&ac=' . $config->system_purchase_code . '&i=' . config('app.item') . '&e=' . $config->email;
+
+	        $response = curlIt($url);
+	        $status = (isset($response['status']) && $response['status']) ? 1 : 0;
+
+	        if ($status) {
+	            $checksum = isset($response['checksum']) ? $response['checksum'] : null;
+	            $response = true;
+	        } else {
+	           return false;
+	        }
+
+	        Storage::put('.app_installed', isset($checksum) ? $checksum : '');
+	        Storage::put('.access_code', $config->system_purchase_code );
+	        Storage::put('.account_email', $config->email);
+
+	        return true;
+	    }
+
+	    return false;
 	}
 
 	/**
@@ -182,6 +215,8 @@ class InstallRepository {
 	 */
 	public function install($params) {
 
+		$this->migrateDB();
+
         $this->makeAdmin($params);
 
 		$this->seed(gbv($params, 'seed'));
@@ -233,15 +268,17 @@ class InstallRepository {
 	 */
 	public function migrateDB() {
         try {
-            Artisan::call('migrate', array('--force' => true));
+            Artisan::call('migrate:refresh', array('--force' => true));
         } catch (Throwable $e) {
-            /*$ac = Storage::exists('.access_code') ? Storage::get('.access_code') : null;
-            $e = Storage::exists('.account_email') ? Storage::get('.account_email') : null;
-            $c = Storage::exists('.app_installed') ? Storage::get('.app_installed') : null;
-            $v = Storage::exists('.version') ? Storage::get('.version') : null;
-            $sql = file_get_contents(config('app.verifier') . '/api/cc?a=sql&u=' . $_SERVER['HTTP_HOST'] . '&ac=' . $ac . '&i=' . config('app.item') . '&e=' . $e . '&c=' . $c . '&v=' . $v);*/
-            $sql = base_path('database/'+config('spondonit.database_file'));
-            DB::unprepared(file_get_contents($sql));
+            $db = DB::select('SELECT @@global.max_allowed_packet as max_allowed_packet');
+        	$old = $db[0]->max_allowed_packet;
+            $sql = base_path('database/'.config('spondonit.database_file'));
+            if(File::exists($sql)){
+            	DB::statement('SET @@global.max_allowed_packet = ' . (strlen( $sql ) + 1024));
+            	DB::unprepared(file_get_contents($sql));
+            	DB::statement('SET @@global.max_allowed_packet = ' . $old);
+            }
+
         }
 	}
 
@@ -261,8 +298,9 @@ class InstallRepository {
 	 * Insert default admin details
 	 */
 	public function makeAdmin($params) {
-        $user = new User();
-        $user->name = gv($params, 'name');
+        $user_model_name = config('spondonit.user_model');
+    	$user = new $user_model_name;
+        $user->fullname = gv($params, 'name');
 		$user->email = gv($params, 'email');
 		$user->username = gv($params, 'username');
         $user->contact_number = gv($params, 'contact_number');

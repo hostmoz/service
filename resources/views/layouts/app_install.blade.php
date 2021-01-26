@@ -2,18 +2,26 @@
 <html lang="en">
 
 <head>
+    @php
+    
+        if(session()->get('subdomain')== false){
+            $base_path = 'public/vendor/spondonit';
+        } else{
+            $base_path = 'vendor/spondonit';
+        }
+    @endphp
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <meta name="csrf-token" content="{{ csrf_token() }}" />
     <title>{{ isset($title) ? $title .' | '. config('app.name') :  config('app.name') }}</title>
 
-    <link rel="stylesheet" href="{{ asset('vendor/spondonit/css/bootstrap.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('vendor/spondonit/css/style.css') }}">
-    <link rel="stylesheet" href="{{ asset('vendor/spondonit/css/infix.css') }}">
-    <link rel="stylesheet" href="{{ asset('vendor/spondonit/css/themify-icons.css') }}">
-    <link rel="stylesheet" href="{{ asset('vendor/spondonit/css/toastr.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('vendor/spondonit/css/parsley.css') }}">
+    <link rel="stylesheet" href="{{ asset($base_path . '/css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ asset($base_path . '/css/style.css') }}">
+    <link rel="stylesheet" href="{{ asset($base_path . '/css/infix.css') }}">
+    <link rel="stylesheet" href="{{ asset($base_path . '/css/themify-icons.css') }}">
+    <link rel="stylesheet" href="{{ asset($base_path . '/css/toastr.min.css') }}">
+    <link rel="stylesheet" href="{{ asset($base_path . '/css/parsley.css') }}">
 
     @stack('css')
 
@@ -40,13 +48,13 @@
         </div>
     </div>
 
-    <script src="{{ asset('vendor/spondonit/js/jquery-3.2.1.min.js') }}"></script>
-    <script src="{{ asset('vendor/spondonit/js/popper.js') }}"></script>
-    <script src="{{ asset('vendor/spondonit/js/bootstrap.min.js') }}"></script>
-    <script src="{{ asset('vendor/spondonit/js/toastr.min.js') }}"></script>
-    <script src="{{ asset('vendor/spondonit/js/parsley.min.js') }}"></script>
-    <script src="{{ asset('vendor/spondonit/js/function.js') }}"></script>
-    <script src="{{ asset('vendor/spondonit/js/common.js') }}"></script>
+    <script src="{{ asset($base_path . '/js/jquery-3.2.1.min.js') }}"></script>
+    <script src="{{ asset($base_path . '/js/popper.js') }}"></script>
+    <script src="{{ asset($base_path . '/js/bootstrap.min.js') }}"></script>
+    <script src="{{ asset($base_path . '/js/toastr.min.js') }}"></script>
+    <script src="{{ asset($base_path . '/js/parsley.min.js') }}"></script>
+    <script src="{{ asset($base_path . '/js/function.js') }}"></script>
+    <script src="{{ asset($base_path . '/js/common.js') }}"></script>
 
     @if (session("message"))
     <script>

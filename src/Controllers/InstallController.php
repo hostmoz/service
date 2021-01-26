@@ -22,9 +22,19 @@ class InstallController extends Controller{
     }
 
     public function index(){
+         if(str_replace('\\', '/', dirname($_SERVER['REQUEST_URI'])) != '/'){
+            session()->put('subdomain', false);
+        } else{
+           session()->put('subdomain', true);
+        }
         $ac = Storage::exists('.app_installed') ? Storage::get('.app_installed') : null;
         if($ac){
             return redirect('/')->send();
+        } else{
+            if($this->repo->checkPreviousInstallation()){
+                return redirect('/')->send();
+            }
+
         }
         return view('service::install.welcome');
     }
