@@ -220,12 +220,11 @@ class InstallRepository {
 
 		File::cleanDirectory('storage/app/public');
 		Artisan::call('storage:link');
+		Artisan::call('key:generate');
         envu([
             'APP_ENV' => 'production',
             'APP_DEBUG'     =>  'false',
             ]);
-
-        Artisan::call('key:generate');
 	}
 
 	public function postInstallScript(){
@@ -299,7 +298,6 @@ class InstallRepository {
 		$user->email = gv($params, 'email');
 		$user->username = gv($params, 'username', gv($params, 'email'));
         $user->role_id = 1;
-		$user->uuid = Str::uuid();
 		$user->password = bcrypt(gv($params, 'password', 'abcd1234'));
         $user->save();
 
