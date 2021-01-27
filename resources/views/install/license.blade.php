@@ -25,7 +25,7 @@
 
                     <div class="form-group">
                         <label class="required" for="installed_domain">{{ __('service::install.installed_domain') }}</label>
-                        <input type="url" class="form-control" name="installed_domain" id="installed_domain" required="required" readonly value="{{ app_url() }}" >
+                        <input type="text" class="form-control" name="installed_domain" id="installed_domain" required="required" readonly value="{{ app_url() }}" >
                     </div>
 
                    {{--  <p class="text-center">
