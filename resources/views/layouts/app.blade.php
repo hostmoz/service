@@ -15,14 +15,14 @@
     <meta name="csrf-token" content="{{ csrf_token() }}" />
     <title>{{ isset($title) ? $title .' | '. config('app.name') :  config('app.name') }}</title>
 
-    <link rel="stylesheet" href="{{ asset('vendor/spondonit/css/bootstrap.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('vendor/spondonit/css/style.css') }}">
-    <link rel="stylesheet" href="{{ asset('vendor/spondonit/css/infix.css') }}">
-    <link rel="stylesheet" href="{{ asset('vendor/spondonit/css/themify-icons.css') }}">
-    <link rel="stylesheet" href="{{ asset('vendor/spondonit/css/toastr.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('vendor/spondonit/css/parsley.css') }}">
-    <link rel="stylesheet" type="text/css" href="{{ asset('vendor/spondonit/css/sweetalert2.min.css') }}" />
-    <link rel="stylesheet" type="text/css" href="{{ asset('vendor/spondonit/css/sweet_alert2.css') }}">
+    <link rel="stylesheet" href="{{ asset($base_path . '/css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ asset($base_path . '/css/style.css') }}">
+    <link rel="stylesheet" href="{{ asset($base_path . '/css/infix.css') }}">
+    <link rel="stylesheet" href="{{ asset($base_path . '/css/themify-icons.css') }}">
+    <link rel="stylesheet" href="{{ asset($base_path . '/css/toastr.min.css') }}">
+    <link rel="stylesheet" href="{{ asset($base_path . '/css/parsley.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ asset($base_path . '/css/sweetalert2.min.css') }}" />
+    <link rel="stylesheet" type="text/css" href="{{ asset($base_path . '/css/sweet_alert2.css') }}">
 
     @stack('css')
 
@@ -40,14 +40,14 @@
         </div>
     </div>
 
-    <script type="text/javascript" src="{{ asset('vendor/spondonit/js/jquery-3.2.1.min.js') }}"></script>
-    <script type="text/javascript" src="{{ asset('vendor/spondonit/js/popper.js') }}"></script>
-    <script type="text/javascript" src="{{ asset('vendor/spondonit/js/bootstrap.min.js') }}"></script>
-    <script type="text/javascript" src="{{ asset('vendor/spondonit/js/toastr.min.js') }}"></script>
-    <script type="text/javascript" src="{{ asset('vendor/spondonit/js/parsley.min.js') }}"></script>
-    <script type="text/javascript" src="{{ asset('vendor/spondonit/js/sweetalert2.min.js') }}"></script>
-    <script type="text/javascript" src="{{ asset('vendor/spondonit/js/function.js') }}"></script>
-    <script type="text/javascript" src="{{ asset('vendor/spondonit/js/common.js') }}"></script>
+    <script type="text/javascript" src="{{ asset($base_path . '/js/jquery-3.2.1.min.js') }}"></script>
+    <script type="text/javascript" src="{{ asset($base_path . '/js/popper.js') }}"></script>
+    <script type="text/javascript" src="{{ asset($base_path . '/js/bootstrap.min.js') }}"></script>
+    <script type="text/javascript" src="{{ asset($base_path . '/js/toastr.min.js') }}"></script>
+    <script type="text/javascript" src="{{ asset($base_path . '/js/parsley.min.js') }}"></script>
+    <script type="text/javascript" src="{{ asset($base_path . '/js/sweetalert2.min.js') }}"></script>
+    <script type="text/javascript" src="{{ asset($base_path . '/js/function.js') }}"></script>
+    <script type="text/javascript" src="{{ asset($base_path . '/js/common.js') }}"></script>
 
     @if (session("message"))
     <script>
