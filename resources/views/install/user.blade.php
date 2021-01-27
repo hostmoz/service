@@ -17,7 +17,7 @@
                 <form method="post" action="{{ route('service.user') }}" id="content_form">
                     <div class="form-group">
                         <label class="required" for="name">{{ __('service::install.name') }}</label>
-                        <input type="text" class="form-control " name="name" id="name"  required="required"  placeholder="{{ __('service::install.name') }}" >
+                        <input type="text" class="form-control " name="name" id="name"  required="required"  placeholder="{{ __('service::install.name') }}" autofocus>
                     </div>
 
                     <div class="form-group">
@@ -25,13 +25,10 @@
                         <input type="email" class="form-control" name="email" id="email" required="required" placeholder="{{ __('service::install.email') }}">
                     </div>
                     <div class="form-group">
-                        <label class="required" for="username">{{ __('service::install.username') }}</label>
-                        <input type="text" class="form-control" name="username" id="username" required="required" placeholder="{{ __('service::install.username') }}">
+                        <label for="username">{{ __('service::install.username') }}</label>
+                        <input type="text" class="form-control" name="username" id="username" placeholder="{{ __('service::install.username') }}">
                     </div>
-                    <div class="form-group">
-                        <label class="required" for="contact_number">{{ __('service::install.contact_number') }}</label>
-                        <input type="text" class="form-control" name="contact_number" id="contact_number" placeholder="{{ __('service::install.contact_number') }}">
-                    </div>
+                    
                     <div class="form-group">
                         <label class="required" for="password">{{ __('service::install.password') }}</label>
                         <input type="password" class="form-control" name="password" id="password" placeholder="{{ __('service::install.password') }}">
@@ -53,5 +50,10 @@
 @push('js')
     <script>
         _formValidation('content_form');
+        $(document).ready(function(){
+            setTimeout(function(){
+                $('.preloader h2').html('We are installing your system. <br> This may take some time. Be patient. Please do not refresh or close the browser')
+            }, 2000);
+        })
     </script>
 @endpush

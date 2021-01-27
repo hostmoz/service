@@ -1,6 +1,6 @@
 <?php
 return array(
-    "access_code" => "Access Code",
+    "access_code" => "Purchase Code",
 "admin_setup" => "Admin Setup",
 "back_button_content" => "Back",
 "confirm_description" => "Your installation is done. Enjoy your App. Thank you",
@@ -70,5 +70,6 @@ return array(
 "welcome_title" => "Welcome To Spondonit",
 "zip_file_corrupted" => "Zip file is corrupted. Please download again.",
 "module_verify" => "Module Verified Successfully",
-"purchase_code" => 'Purchase Code'
+"purchase_code" => 'Purchase Code',
+"installed_domain" => "Installation domain"
 );

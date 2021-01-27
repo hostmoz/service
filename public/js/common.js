@@ -94,3 +94,7 @@ $(document).on('click', '#direct_update', function(e) {
             }
         });
 });
+
+$(document).ready(function(){ 
+    $('.preloader').fadeOut('slow');
+});

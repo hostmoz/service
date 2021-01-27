@@ -3,7 +3,6 @@
 
 <head>
     @php
-    
         if(session()->get('subdomain')== false){
             $base_path = 'public/vendor/spondonit';
         } else{
@@ -29,6 +28,12 @@
 </head>
 
 <body class="admin">
+    <div class="preloader">
+        <div class="loader_img">
+            <img src="{{ asset($base_path . '/loader.gif') }}" alt="loading..." height="64" width="64">
+            <h2>Please Wait</h2>
+        </div>
+    </div>
     <div class="container">
         <div class="col-md-8 offset-2  mt-40">
             <ul id="progressbar">

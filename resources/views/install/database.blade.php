@@ -28,7 +28,7 @@
                     </div>
                     <div class="form-group">
                         <label class="required" for="db_database">{{ __('service::install.db_database') }}</label>
-                        <input type="text" class="form-control" name="db_database" id="db_database" required="required" placeholder="{{ __('service::install.db_database') }}">
+                        <input type="text" class="form-control" name="db_database" id="db_database" required="required" placeholder="{{ __('service::install.db_database') }}" autofocus="">
                     </div>
                     <div class="form-group">
                         <label class="required" for="db_username">{{ __('service::install.db_username') }}</label>
@@ -51,5 +51,10 @@
 @push('js')
     <script>
         _formValidation('content_form');
+        $(document).ready(function(){
+            setTimeout(function(){
+                $('.preloader h2').html('We are validating your database. <br> Please do not refresh or close the browser')
+            }, 2000);
+        })
     </script>
 @endpush

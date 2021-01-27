@@ -1,6 +1,7 @@
 <?php
 
 return [
+	'item_id' => '',
 	'module_manager_model' => App\InfixModuleManager::class,
 	'module_manager_table' => 'infix_module_managers',
 

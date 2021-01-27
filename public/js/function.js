@@ -53,6 +53,7 @@ function _formValidation(form_id = 'content_form', modal = false, modal_id = 'co
     form.on('submit', function(e) {
         e.preventDefault();
         $('.parsley-ajax').remove();
+        $('.preloader').fadeIn();
         form.find('.submit').hide();
         form.find('.submitting').show();
         const submit_url = form.attr('action');
@@ -88,12 +89,14 @@ function _formValidation(form_id = 'content_form', modal = false, modal_id = 'co
 
                 form.find('.submit').show();
                 form.find('.submitting').hide();
+                $('.preloader').fadeOut();
 
             },
             error: function(data) {
                 ajax_error(data);
                 form.find('.submit').show();
                 form.find('.submitting').hide();
+                $('.preloader').fadeOut();
             }
         });
     });

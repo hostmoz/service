@@ -16,11 +16,16 @@
                 <form method="post" action="{{ route('service.license') }}" id="content_form">
                     <div class="form-group">
                         <label class="required" for="access_code">{{ __('service::install.access_code') }}</label>
-                        <input type="text" class="form-control " name="access_code" id="access_code"  required="required"  placeholder="{{ __('service::install.access_code') }}" >
+                        <input type="text" class="form-control " name="access_code" id="access_code"  required="required" autofocus=""  placeholder="{{ __('service::install.access_code') }}" >
                     </div>
                     <div class="form-group">
                         <label class="required" for="envato_email">{{ __('service::install.envato_email') }}</label>
                         <input type="email" class="form-control" name="envato_email" id="envato_email" required="required" placeholder="{{ __('service::install.envato_email') }}" >
+                    </div>
+
+                    <div class="form-group">
+                        <label class="required" for="installed_domain">{{ __('service::install.installed_domain') }}</label>
+                        <input type="url" class="form-control" name="installed_domain" id="installed_domain" required="required" readonly value="{{ app_url() }}" >
                     </div>
 
                    {{--  <p class="text-center">
@@ -42,5 +47,10 @@
 @push('js')
     <script>
         _formValidation('content_form');
+         $(document).ready(function(){
+            setTimeout(function(){
+                $('.preloader h2').text('We are validating your license. Please do not refresh or close the browser')
+            }, 2000);
+        })
     </script>
 @endpush

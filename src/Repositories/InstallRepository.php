@@ -51,31 +51,35 @@ class InstallRepository {
 	 */
 	public function checkPreviousInstallation() {
 
+		try {
+	        DB::connection()->getPdo();
 
-		if( Schema::hasTable('sm_general_settings') && Schema::hasTable('users')){
-	        $settings_model_name = config('spondonit.settings_model');
-	         $settings_model = new $settings_model_name;
-	        $config = $settings_model->find(1);
-	        $url = config('app.verifier') . '/api/cc?a=install&u=' . $_SERVER['HTTP_HOST'] . '&ac=' . $config->system_purchase_code . '&i=' . config('app.item') . '&e=' . $config->email;
+	        if(Schema::hasTable(config('spondonit.settings_table')) && Schema::hasTable('users')){
+		        $settings_model_name = config('spondonit.settings_model');
+		         $settings_model = new $settings_model_name;
+		        $config = $settings_model->find(1);
+		        $url = config('app.verifier') . '/api/cc?a=install&u=' . $_SERVER['HTTP_HOST'] . '&ac=' . $config->system_purchase_code . '&i=' . config('app.item') . '&e=' . $config->email;
 
-	        $response = curlIt($url);
-	        $status = (isset($response['status']) && $response['status']) ? 1 : 0;
+		        $response = curlIt($url);
+		        $status = (isset($response['status']) && $response['status']) ? 1 : 0;
 
-	        if ($status) {
-	            $checksum = isset($response['checksum']) ? $response['checksum'] : null;
-	            $response = true;
-	        } else {
-	           return false;
-	        }
+		        if ($status) {
+		            $checksum = isset($response['checksum']) ? $response['checksum'] : null;
+		            $response = true;
+		        } else {
+		           return false;
+		        }
 
-	        Storage::put('.app_installed', isset($checksum) ? $checksum : '');
-	        Storage::put('.access_code', $config->system_purchase_code );
-	        Storage::put('.account_email', $config->email);
+		        Storage::put('.app_installed', isset($checksum) ? $checksum : '');
+		        Storage::put('.access_code', $config->system_purchase_code );
+		        Storage::put('.account_email', $config->email);
 
-	        return true;
+		        return true;
+		    }
+	   
+	    } catch (\Exception $e) {
+	        return false;
 	    }
-
-	    return false;
 	}
 
 	/**
@@ -95,10 +99,10 @@ class InstallRepository {
 		$server[] = $this->check(extension_loaded('curl'), 'CURL is installed.', 'Install and enable CURL.', true);
 		$server[] = $this->check(ini_get('allow_url_fopen'), 'allow_url_fopen is on.', 'Turn on allow_url_fopen.', true);
 
-		$folder[] = $this->check(is_writable("../.env"), 'File .env is writable', 'File .env is not writable', true);
-		$folder[] = $this->check(is_writable("../storage/framework"), 'Folder /storage/framework is writable', 'Folder /storage/framework is not writable', true);
-		$folder[] = $this->check(is_writable("../storage/logs"), 'Folder /storage/logs is writable', 'Folder /storage/logs is not writable', true);
-		$folder[] = $this->check(is_writable("../bootstrap/cache"), 'Folder /bootstrap/cache is writable', 'Folder /bootstrap/cache is not writable', true);
+		$folder[] = $this->check(is_writable(base_path('/.env')), 'File .env is writable', 'File .env is not writable', true);
+		$folder[] = $this->check(is_writable(base_path("/storage/framework")), 'Folder /storage/framework is writable', 'Folder /storage/framework is not writable', true);
+		$folder[] = $this->check(is_writable(base_path("/storage/logs")), 'Folder /storage/logs is writable', 'Folder /storage/logs is not writable', true);
+		$folder[] = $this->check(is_writable(base_path("/bootstrap/cache")), 'Folder /bootstrap/cache is writable', 'Folder /bootstrap/cache is not writable', true);
 
 		$verifier = config('app.verifier');
 
@@ -157,8 +161,8 @@ class InstallRepository {
 		if ($status) {
 			$checksum = isset($response['checksum']) ? $response['checksum'] : null;
 		} else {
-			$message = isset($response['message']) ? $response['message'] : trans('service::install.contact_script_author');
-			throw ValidationException::withMessages(['message' => $message]);
+			$message = gv($response, 'message') ? $response['message'] : trans('service::install.contact_script_author');
+			throw ValidationException::withMessages(['access_code' => $message]);
         }
 
         Storage::put('.app_installed', isset($checksum) ? $checksum : '');
@@ -291,10 +295,9 @@ class InstallRepository {
 	public function makeAdmin($params) {
         $user_model_name = config('spondonit.user_model');
     	$user = new $user_model_name;
-        $user->fullname = gv($params, 'name');
+        $user->full_name = gv($params, 'name');
 		$user->email = gv($params, 'email');
-		$user->username = gv($params, 'username');
-        $user->contact_number = gv($params, 'contact_number');
+		$user->username = gv($params, 'username', gv($params, 'email'));
         $user->role_id = 1;
 		$user->uuid = Str::uuid();
 		$user->password = bcrypt(gv($params, 'password', 'abcd1234'));
