@@ -10,7 +10,7 @@ class InitRepository {
 
     public function init() {
 		config(['app.item' => config('spondonit.item_id')]);
-		config(['app.verifier' => 'http://auth.spondonit.test']);
+		config(['app.verifier' => 'http://auth.uxseven.com']);
 		config(['app.helpdoc' => 'http://help.uxseven.com']);
     }
 
