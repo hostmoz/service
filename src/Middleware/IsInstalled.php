@@ -28,15 +28,17 @@ class IsInstalled
         $this->repo->init();
         $this->repo->config();
 
-        $c = Storage::exists('.app_installed') ? Storage::get('.app_installed') : false;
-
         if($this->inExceptArray($request)){
             return $next($request);
         }
 
+        $this->repo->check();
+
+        $c = Storage::exists('.app_installed') ? Storage::get('.app_installed') : false;
         if (!$c) {
             return redirect('/install');
         }
+
         return $next($request);
 
 
