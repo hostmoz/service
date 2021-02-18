@@ -3,7 +3,6 @@
 namespace SpondonIt\Service\Controllers;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Contracts\Session\Session;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use SpondonIt\Service\Repositories\InstallRepository;
@@ -22,27 +21,23 @@ class InstallController extends Controller{
     }
 
     public function index(){
-         if(str_replace('\\', '/', dirname($_SERVER['REQUEST_URI'])) != '/'){
-            session()->put('subdomain', false);
-        } else{
-           session()->put('subdomain', true);
-        }
+        
         $ac = Storage::exists('.app_installed') ? Storage::get('.app_installed') : null;
         if($ac){
-            return redirect('/')->send();
+            abort(404);
         } else{
             if($this->repo->checkPreviousInstallation()){
                 return redirect('/')->send();
             }
-
         }
         return view('service::install.welcome');
     }
 
     public function preRequisite(){
+  
         $ac = Storage::exists('.app_installed') ? Storage::get('.app_installed') : null;
         if($ac){
-            return redirect('/')->send();
+            abort(404);
         }
         $checks = $this->repo->getPreRequisite();
 		$server_checks = $checks['server'];
@@ -50,16 +45,22 @@ class InstallController extends Controller{
         $verifier = $checks['verifier'];
         $has_false = in_array(false, $checks);
 
-		envu(['APP_ENV' => 'local']);
+		envu(['APP_ENV' => 'production']);
 		$name = env('APP_NAME');
 
 		return view('service::install.preRequisite', compact('server_checks', 'folder_checks', 'name', 'verifier', 'has_false'));
     }
 
     public function license(){
+   
         $checks = $this->repo->getPreRequisite();
         if(in_array(false, $checks)){
             return redirect()->route('service.preRequisite')->with(['message' => __('service::install.requirement_failed'), 'status' => 'error']);
+        }
+
+        $ac = Storage::exists('.app_installed') ? Storage::get('.app_installed') : null;
+        if($ac){
+            abort(404);
         }
 
 		return view('service::install.license');
@@ -67,13 +68,18 @@ class InstallController extends Controller{
 
     public function post_license(LicenseRequest $request){
         $this->repo->validateLicense($request->all());
+        session()->flash('license', 'verified');
 		return response()->json(['message' => __('service::install.valid_license'), 'goto' => route('service.database')]);
     }
 
     public function database(){
-        $checks = $this->repo->checkLicense();
-        if(!$checks){
-            return redirect()->route('service.license')->with(['message' => __('service::install.invalid_license'), 'status' => 'error']);
+        
+        $ac = Storage::exists('.temp_app_installed') ? Storage::get('.temp_app_installed') : null;
+        if(!$ac){
+            abort(404);
+        }
+        if ($this->repo->checkDatabaseConnection()) {
+            return redirect()->route('service.user')->with(['message' => __('service::install.connection_established'), 'status' => 'success']);
         }
 		return view('service::install.database');
     }
@@ -85,26 +91,43 @@ class InstallController extends Controller{
     }
 
     public function user(){
-        if(session('database') != 'connected'){
-            return redirect()->route('service.database')->with(['message' => 'Please set your database connection.', 'status' => 'error']);
+        $ac = Storage::exists('.temp_app_installed') ? Storage::get('.temp_app_installed') : null;
+        if(!$this->repo->checkDatabaseConnection() || !$ac){
+            abort(404);
         }
+       
 		return view('service::install.user');
     }
 
     public function post_user(UserRequest $request){
+       
         $this->repo->install($request->all());
+        Storage::put('.user_email', $request->email);
+        Storage::put('.user_pass', $request->password);
 		return response()->json(['message' => __('service::install.done_msg'), 'goto' => route('service.done')]);
     }
 
     public function done(){
-		return view('service::install.done');
+
+        $data['user'] = Storage::exists('.user_email') ? Storage::get('.user_email') : 'Tariq';
+        $data['pass'] = Storage::exists('.user_pass') ? Storage::get('.user_pass') : null;
+
+        if($data['user'] and $data['pass']){
+            Storage::delete(['.user_email', '.user_pass']);
+            return view('service::install.done', $data);
+        } else{
+            abort(404);
+        }
+
+		
     }
 
-     public function ManageAddOnsValidation(ModuleInstallRequest $request)
-    {
+     public function ManageAddOnsValidation(ModuleInstallRequest $request){
         $response = $this->repo->installModule($request->all());
         return response()->json(['message' => __('service::install.module_verify'), 'reload' => true]);
     }
+
+    
 
 
 }

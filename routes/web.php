@@ -16,23 +16,12 @@ Route::group(['namespace' => 'SpondonIt\Service\Controllers', 'middleware' => 'w
         Route::get('done', 'InstallController@done')->name('service.done');
     });
 
-    Route::get('/update', 'UpdateController@index')->name('service.update');
-    Route::post('/update', 'UpdateController@update');
-    Route::post('/download', 'UpdateController@download')->name('service.delete');
+    // Route::get('/update', 'UpdateController@index')->name('service.update');
+    // Route::post('/update', 'UpdateController@update');
+    // Route::post('/download', 'UpdateController@download')->name('service.delete');
 
     Route::post('/install-adons', 'InstallController@ManageAddOnsValidation')->name('ManageAddOnsValidation');
 
-    /* Route::get('/install/pre-requisite', 'InstallController@preRequisite');
-
-    Route::post('/install/validate/{option}', 'InstallController@store');
-    Route::post('/install', 'InstallController@store');
-    Route::post('/license', 'LicenseController@verify');
-
-    Route::get('/about', 'HomeController@about');
-    Route::get('/support', 'SupportController@index');
-    Route::post('/support', 'SupportController@submit');
-
-    Route::post('/help/content', 'HomeController@helpDoc'); */
 });
 
 

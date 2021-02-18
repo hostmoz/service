@@ -27,9 +27,7 @@ class UserRequest extends FormRequest
         $rules = array();
 
         $rules = [
-            'name'                  => 'required|max:191',
             'email'                 => 'required|email',
-            'username'              => 'sometimes|nullable|string',
             'password'              => 'required|min:6',
             'password_confirmation' => 'required|same:password',
         ];
@@ -46,10 +44,7 @@ class UserRequest extends FormRequest
     {
         return [
 
-            'name'                  => trans('service::install.name'),
             'email'                 => trans('service::install.email'),
-            'username'              => trans('service::install.username'),
-            'contact_number'        => trans('service::install.contact_number'),
             'password'              => trans('service::install.password'),
             'password_confirmation' => trans('service::install.password_confirmation'),
         ];

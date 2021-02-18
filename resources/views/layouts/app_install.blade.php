@@ -3,11 +3,9 @@
 
 <head>
     @php
-        if(session()->get('subdomain')== false){
-            $base_path = 'public/vendor/spondonit';
-        } else{
-            $base_path = 'vendor/spondonit';
-        }
+      
+        $base_path = 'vendor/spondonit';
+        
     @endphp
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">

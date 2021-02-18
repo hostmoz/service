@@ -4,10 +4,8 @@ ini_set('max_execution_time', -1);
 
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Contracts\Session\Session;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Schema;
 use Throwable;
@@ -53,10 +51,10 @@ class InstallRepository {
 
 		try {
 	        DB::connection()->getPdo();
-
+            
 	        if(Schema::hasTable(config('spondonit.settings_table')) && Schema::hasTable('users')){
 		        $settings_model_name = config('spondonit.settings_model');
-		         $settings_model = new $settings_model_name;
+		        $settings_model = new $settings_model_name;
 		        $config = $settings_model->find(1);
 		        $url = config('app.verifier') . '/api/cc?a=install&u=' . $_SERVER['HTTP_HOST'] . '&ac=' . $config->system_purchase_code . '&i=' . config('app.item') . '&e=' . $config->email;
 
@@ -76,8 +74,9 @@ class InstallRepository {
 
 		        return true;
 		    }
-	   
+
 	    } catch (\Exception $e) {
+            dd($e);
 	        return false;
 	    }
 	}
@@ -113,10 +112,10 @@ class InstallRepository {
 	 * Validate database connection, table count
 	 */
 	public function validateDatabase($params) {
-		$db_host = gv($params, 'db_host');
-		$db_username = gv($params, 'db_username');
-		$db_password = gv($params, 'db_password');
-		$db_database = gv($params, 'db_database');
+		$db_host = gv($params, 'db_host', env('DB_HOST'));
+		$db_username = gv($params, 'db_username', env('DB_USERNAME'));
+		$db_password = gv($params, 'db_password', env('DB_PASSWORD'));
+		$db_database = gv($params, 'db_database', env('DB_DATABASE'));
 
         $link = @mysqli_connect($db_host, $db_username, $db_password);
 
@@ -129,16 +128,50 @@ class InstallRepository {
 			throw ValidationException::withMessages(['message' => trans('service::install.db_not_found')]);
         }
 
+        if(!gbv($params, 'force_migrate')){
+            $count_table_query = mysqli_query($link, "show tables");
+            $count_table = mysqli_num_rows($count_table_query);
+    
+            if ($count_table) {
+                throw ValidationException::withMessages(['message' => trans('service::install.existing_table_in_database')]);
+            }
+    
+        } 
+        
+        if(gbv($params, 'force_migrate')){
+            \Artisan::call('db:wipe', ['--force' => true]);
+        }
+       
+        $this->setDBEnv($params);
+
+		return true;
+    }
+
+    public function checkDatabaseConnection(){
+        $db_host =  env('DB_HOST');
+		$db_username =  env('DB_USERNAME');
+		$db_password =  env('DB_PASSWORD');
+		$db_database = env('DB_DATABASE');
+
+        $link = @mysqli_connect($db_host, $db_username, $db_password);
+        if (!$link) {
+			return false;
+		}
+        $select_db = mysqli_select_db($link, $db_database);
+
+        if (!$select_db) {
+			return false;
+		}
+        
         $count_table_query = mysqli_query($link, "show tables");
 		$count_table = mysqli_num_rows($count_table_query);
 
 		if ($count_table) {
-			throw ValidationException::withMessages(['message' => trans('service::install.existing_table_in_database')]);
-        }
+			return false;
+		}
 
-        $this->setDBEnv($params);
-
-		return true;
+		
+        return true;
     }
 
     public function validateLicense($params)
@@ -150,10 +183,10 @@ class InstallRepository {
 		if (!isConnected()) {
 			return;
         }
-      
+
        $url = config('app.verifier') . '/api/cc?a=install&u=' . $_SERVER['HTTP_HOST'] . '&ac=' . request('access_code') . '&i=' . config('app.item') . '&e=' . request('envato_email');
-   
-        
+
+
         $response = curlIt($url);
 
 		$status = (isset($response['status']) && $response['status']) ? 1 : 0;
@@ -165,7 +198,7 @@ class InstallRepository {
 			throw ValidationException::withMessages(['access_code' => $message]);
         }
 
-        Storage::put('.app_installed', isset($checksum) ? $checksum : '');
+        Storage::put('.temp_app_installed', isset($checksum) ? $checksum : '');
 		Storage::put('.access_code', request('access_code'));
         Storage::put('.account_email', request('envato_email'));
 
@@ -184,18 +217,18 @@ class InstallRepository {
 
 		$ac = Storage::exists('.access_code') ? Storage::get('.access_code') : null;
 		$e = Storage::exists('.account_email') ? Storage::get('.account_email') : null;
-		$c = Storage::exists('.app_installed') ? Storage::get('.app_installed') : null;
+		$c = Storage::exists('.temp_app_installed') ? Storage::get('.temp_app_installed') : null;
 		$v = Storage::exists('.version') ? Storage::get('.version') : null;
 
 
 		$url = config('app.verifier') . '/api/cc?a=verify&u=' . $_SERVER['HTTP_HOST'] . '&ac=' . $ac . '&i=' . config('app.item') . '&e=' . $e . '&c=' . $c . '&v=' . $v;
 		$response = curlIt($url);
 
-		$status = $response['status'];
-
+		$status = gbv($response, 'status');
+    
 		if (!$status) {
 			Storage::delete(['.access_code', '.account_email']);
-			Storage::put('.app_installed', '');
+			Storage::put('.temp_app_installed', '');
 			return false;
 		} else {
 			Storage::put('.access_log', date('Y-m-d'));
@@ -212,22 +245,29 @@ class InstallRepository {
 
 		$this->migrateDB();
 
-        $this->makeAdmin($params);
+        $admin = $this->makeAdmin($params);
 
 		$this->seed(gbv($params, 'seed'));
 
-		$this->postInstallScript();
+		$this->postInstallScript($admin, $params);
 
 		File::cleanDirectory('storage/app/public');
+
 		Artisan::call('storage:link');
-		Artisan::call('key:generate');
+
+        Artisan::call('key:generate', ['--force' => true]);
+
+        $ac = Storage::exists('.temp_app_installed') ? Storage::get('.temp_app_installed') : null;
+        Storage::put('.app_installed', $ac);
+        Storage::delete('.temp_app_installed');
+
         envu([
             'APP_ENV' => 'production',
             'APP_DEBUG'     =>  'false',
             ]);
 	}
 
-	public function postInstallScript(){
+	public function postInstallScript($admin, $params){
 		//write your post install script here
 	}
 
@@ -264,17 +304,18 @@ class InstallRepository {
         try {
             Artisan::call('migrate:refresh', array('--force' => true));
         } catch (Throwable $e) {
-            $db = DB::select('SELECT @@global.max_allowed_packet as max_allowed_packet');
-        	$old = $db[0]->max_allowed_packet;
+            $this->rollbackDb();
             $sql = base_path('database/'.config('spondonit.database_file'));
             if(File::exists($sql)){
-            	DB::statement('SET @@global.max_allowed_packet = ' . (strlen( $sql ) + 1024));
             	DB::unprepared(file_get_contents($sql));
-            	DB::statement('SET @@global.max_allowed_packet = ' . $old);
             }
 
         }
 	}
+
+    public function rollbackDb(){
+        Artisan::call('migrate:rollback', array('--force' => true));
+    }
 
 	/**
 	 * Seed tables to database
@@ -284,7 +325,7 @@ class InstallRepository {
 			return;
 		}
 
-		$db = Artisan::call('db:seed');
+		$db = Artisan::call('db:seed', array('--force' => true));
 	}
 
 
@@ -292,16 +333,27 @@ class InstallRepository {
 	 * Insert default admin details
 	 */
 	public function makeAdmin($params) {
-        $user_model_name = config('spondonit.user_model');
-    	$user = new $user_model_name;
-        $user->full_name = gv($params, 'name');
-		$user->email = gv($params, 'email');
-		$user->username = gv($params, 'username', gv($params, 'email'));
-        $user->role_id = 1;
-		$user->password = bcrypt(gv($params, 'password', 'abcd1234'));
-        $user->save();
+        try{
+            $user_model_name = config('spondonit.user_model');
+            $user_class = new $user_model_name;
+            $user = $user_class->find(1);
+            if(!$user){
+               $user = new $user_model_name;
+            }
+            $user->name = 'Super admin';
+            $user->email = gv($params, 'email');
+            if(Schema::hasColumn('users', 'role_id')){
+                $user->role_id = 1;
+            }
 
-        return true;
+            $user->password = bcrypt(gv($params, 'password', 'abcd1234'));
+            $user->save();
+        } catch(\Exception $e){
+            $this->rollbackDb();
+            throw ValidationException::withMessages(['message' => $e->getMessage()]);
+        }
+
+
 	}
 
 	public function installModule($params){
@@ -316,16 +368,16 @@ class InstallRepository {
         $array = json_decode($strJsonFileContents, true);
 
         $item_id = $array[$name]['item_id'];
-        
+
         $e = Storage::exists('.account_email') ? Storage::get('.account_email') : null;
 
         $url = config('app.verifier') . '/api/cc?a=install&u=' . $_SERVER['HTTP_HOST'] . '&ac=' . $code  . '&i=' .$item_id . '&e=' . $e.'&t=Module';
-           
+
         $response = curlIt($url);
 
-  		
+
         $status = gbv($response, 'status', 0);
-            
+
         if ($status) {
 
             // added a new column in sm general settings
@@ -335,10 +387,8 @@ class InstallRepository {
                 });
             }
 
-
-
             try {
-                                 
+
                 $version = $array[$name]['versions'][0];
                 $url = $array[$name]['url'][0];
                 $notes = $array[$name]['notes'][0];
@@ -371,7 +421,7 @@ class InstallRepository {
 
 
                 return true;
-                
+
             } catch (\Exception $e) {
                 DB::rollback();
                 $this->disableModule($name);

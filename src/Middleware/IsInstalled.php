@@ -26,18 +26,19 @@ class IsInstalled
     public function handle($request, Closure $next)
     {
         $this->repo->init();
-        $this->repo->config();
 
         if($this->inExceptArray($request)){
             return $next($request);
         }
 
-        $this->repo->check();
+        // $this->repo->check();
 
         $c = Storage::exists('.app_installed') ? Storage::get('.app_installed') : false;
         if (!$c) {
             return redirect('/install');
         }
+
+        $this->repo->config();
 
         return $next($request);
 
