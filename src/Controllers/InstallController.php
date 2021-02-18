@@ -109,7 +109,7 @@ class InstallController extends Controller{
 
     public function done(){
 
-        $data['user'] = Storage::exists('.user_email') ? Storage::get('.user_email') : 'Tariq';
+        $data['user'] = Storage::exists('.user_email') ? Storage::get('.user_email') : null;
         $data['pass'] = Storage::exists('.user_pass') ? Storage::get('.user_pass') : null;
 
         if($data['user'] and $data['pass']){

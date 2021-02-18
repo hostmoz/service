@@ -46,7 +46,7 @@ class InitRepository {
                 }
             } 
 
-            return abort(403, $e->getMessage());
+            // return abort(403, $e->getMessage());
             
         }
     }

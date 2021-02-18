@@ -254,8 +254,10 @@ class InstallRepository {
 
 		Artisan::call('storage:link');
 
-        Artisan::call('key:generate', ['--force' => true]);
+        Artisan::call('config:cache');
 
+        Artisan::call('key:generate', ['--force' => true]);
+        
         $ac = Storage::exists('.temp_app_installed') ? Storage::get('.temp_app_installed') : null;
         Storage::put('.app_installed', $ac);
         Storage::delete('.temp_app_installed');
