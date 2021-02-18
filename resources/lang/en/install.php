@@ -71,5 +71,6 @@ return array(
 "zip_file_corrupted" => "Zip file is corrupted. Please download again.",
 "module_verify" => "Module Verified Successfully",
 "purchase_code" => 'Purchase Code',
-"installed_domain" => "Installation domain"
+"installed_domain" => "Installation domain",
+"error" => 'Something Wrong'
 );

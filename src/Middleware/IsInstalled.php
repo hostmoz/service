@@ -31,6 +31,7 @@ class IsInstalled
             return $next($request);
         }
 
+        
         $this->repo->check();
 
         $c = Storage::exists('.app_installed') ? Storage::get('.app_installed') : false;

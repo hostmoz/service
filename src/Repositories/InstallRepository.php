@@ -137,11 +137,11 @@ class InstallRepository {
     
         } 
         
+        $this->setDBEnv($params);
+
         if(gbv($params, 'force_migrate')){
             \Artisan::call('db:wipe', ['--force' => true]);
         }
-       
-        $this->setDBEnv($params);
 
 		return true;
     }
