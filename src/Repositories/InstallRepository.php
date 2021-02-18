@@ -76,7 +76,6 @@ class InstallRepository {
 		    }
 
 	    } catch (\Exception $e) {
-            dd($e);
 	        return false;
 	    }
 	}
