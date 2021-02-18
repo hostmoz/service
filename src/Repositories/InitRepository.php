@@ -24,6 +24,7 @@ class InitRepository {
 
     public function checkDatabase(){
         
+       
         try {
 	        DB::connection()->getPdo();
 
