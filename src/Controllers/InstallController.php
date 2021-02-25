@@ -92,6 +92,7 @@ class InstallController extends Controller{
 
     public function user(){
         $ac = Storage::exists('.temp_app_installed') ? Storage::get('.temp_app_installed') : null;
+
         if(!$this->repo->checkDatabaseConnection() || !$ac){
             abort(404);
         }
@@ -113,6 +114,7 @@ class InstallController extends Controller{
         $data['pass'] = Storage::exists('.user_pass') ? Storage::get('.user_pass') : null;
 
         if($data['user'] and $data['pass']){
+            \Log::info('done');
             Storage::delete(['.user_email', '.user_pass']);
             return view('service::install.done', $data);
         } else{

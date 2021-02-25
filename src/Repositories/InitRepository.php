@@ -10,7 +10,7 @@ class InitRepository {
 
     public function init() {
 		config(['app.item' => config('spondonit.item_id')]);
-		config(['app.verifier' => 'http://auth.uxseven.com']);
+		config(['app.verifier' => 'http://auth.spondonit.test']);
     }
 
     public function config()
@@ -29,9 +29,7 @@ class InitRepository {
 	        DB::connection()->getPdo();
 
             if(!Schema::hasTable(config('spondonit.settings_table')) || !Schema::hasTable('users')){
-               
-                Storage::delete(['.access_code', '.account_email']);
-			    Storage::put('.app_installed', '');
+			    return false;
             }
             
         } catch(\Exception $e){
@@ -45,15 +43,14 @@ class InitRepository {
                     }
                 }
             } 
-
-            // return abort(403, $e->getMessage());
-            
         }
+
+        return true;
     }
 
     public function check() {
 
-        $this->checkDatabase();
+        
 
 		if (isTestMode()) {
 			return;
@@ -64,6 +61,14 @@ class InitRepository {
 		}
 
 		if (!isConnected()) {
+			return;
+		}
+
+		$database = $this->checkDatabase();
+		if (!$database) {
+			Storage::delete(['.access_code', '.account_email']);
+			Storage::put('.app_installed', '');
+			Storage::put('.access_log', date('Y-m-d'));
 			return;
 		}
 

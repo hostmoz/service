@@ -63,13 +63,14 @@ class InstallRepository {
 
 		        if ($status) {
 		            $checksum = isset($response['checksum']) ? $response['checksum'] : null;
+		            $license_code = isset($response['license_code']) ? $response['license_code'] : null;
 		            $response = true;
 		        } else {
 		           return false;
 		        }
 
 		        Storage::put('.app_installed', isset($checksum) ? $checksum : '');
-		        Storage::put('.access_code', $config->system_purchase_code );
+		        Storage::put('.access_code', isset($license_code) ? $license_code : '' );
 		        Storage::put('.account_email', $config->email);
 
 		        return true;
@@ -152,7 +153,10 @@ class InstallRepository {
 		$db_password =  env('DB_PASSWORD');
 		$db_database = env('DB_DATABASE');
 
+
+
         $link = @mysqli_connect($db_host, $db_username, $db_password);
+
         if (!$link) {
 			return false;
 		}
@@ -192,13 +196,14 @@ class InstallRepository {
 
 		if ($status) {
 			$checksum = isset($response['checksum']) ? $response['checksum'] : null;
+			$license_code = isset($response['license_code']) ? $response['license_code'] : null;
 		} else {
 			$message = gv($response, 'message') ? $response['message'] : trans('service::install.contact_script_author');
 			throw ValidationException::withMessages(['access_code' => $message]);
         }
 
         Storage::put('.temp_app_installed', isset($checksum) ? $checksum : '');
-		Storage::put('.access_code', request('access_code'));
+		Storage::put('.access_code', isset($license_code) ? $license_code : '');
         Storage::put('.account_email', request('envato_email'));
 
         return true;
@@ -253,8 +258,6 @@ class InstallRepository {
 		File::cleanDirectory('storage/app/public');
 
 		Artisan::call('storage:link');
-
-        Artisan::call('config:cache');
 
         Artisan::call('key:generate', ['--force' => true]);
         
