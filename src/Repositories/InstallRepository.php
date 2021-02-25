@@ -190,6 +190,7 @@ class InstallRepository {
        $url = config('app.verifier') . '/api/cc?a=install&u=' . $_SERVER['HTTP_HOST'] . '&ac=' . request('access_code') . '&i=' . config('app.item') . '&e=' . request('envato_email');
 
 
+
         $response = curlIt($url);
 
 		$status = (isset($response['status']) && $response['status']) ? 1 : 0;
@@ -205,6 +206,7 @@ class InstallRepository {
         Storage::put('.temp_app_installed', isset($checksum) ? $checksum : '');
 		Storage::put('.access_code', isset($license_code) ? $license_code : '');
         Storage::put('.account_email', request('envato_email'));
+        Storage::put('.access_log', date('Y-m-d'));
 
         return true;
 

@@ -10,7 +10,7 @@ class InitRepository {
 
     public function init() {
 		config(['app.item' => config('spondonit.item_id')]);
-		config(['app.verifier' => 'http://auth.spondonit.test']);
+		config(['app.verifier' => 'http://auth.uxseven.com']);
     }
 
     public function config()
@@ -77,10 +77,10 @@ class InitRepository {
 		$c = Storage::exists('.app_installed') ? Storage::get('.app_installed') : null;
 		$v = Storage::exists('.version') ? Storage::get('.version') : null;
 
-		$url = config('app.verifier') . '/api/cc?a=verify&u=' . url()->current() . '&ac=' . $ac . '&i=' . config('app.item') . '&e=' . $e . '&c=' . $c . '&v=' . $v;
+		$url = config('app.verifier') . '/api/cc?a=verify&u=' . $_SERVER['HTTP_HOST'] . '&ac=' . $ac . '&i=' . config('app.item') . '&e=' . $e . '&c=' . $c . '&v=' . $v;
 		$response = curlIt($url);
 
-		$status = $response['status'];
+		$status = gbv($response, 'status');
 
 		if (!$status) {
 			Storage::delete(['.access_code', '.account_email']);
