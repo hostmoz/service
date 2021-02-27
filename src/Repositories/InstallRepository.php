@@ -20,6 +20,17 @@ class InstallRepository {
 
 	}
 
+	public function checkInstallation(){
+		$ac = Storage::exists('.app_installed') ? Storage::get('.app_installed') : null;
+        if($ac){
+            abort(404);
+        } else{
+            if($this->checkPreviousInstallation()){
+                return redirect('/')->send();
+            }
+        }
+	}
+
 	/**
 	 * Used to compare version of PHP
 	 */
@@ -251,31 +262,30 @@ class InstallRepository {
 
 		$this->migrateDB();
 
-        $admin = $this->makeAdmin($params);
-
-		$this->seed(gbv($params, 'seed'));
-
-		$this->postInstallScript($admin, $params);
-
 		File::cleanDirectory('storage/app/public');
+		try{
+			Artisan::call('storage:link');
+		} catch (Exception $e){
 
-		Artisan::call('storage:link');
+		}
+		
 
         Artisan::call('key:generate', ['--force' => true]);
         
         $ac = Storage::exists('.temp_app_installed') ? Storage::get('.temp_app_installed') : null;
         Storage::put('.app_installed', $ac);
+		Storage::put('.user_email', gv($params, 'email'));
+        Storage::put('.user_pass', gv($params, 'password'));
+
         Storage::delete('.temp_app_installed');
+
 
         envu([
             'APP_ENV' => 'production',
             'APP_DEBUG'     =>  'false',
-            ]);
+        ]);
 	}
 
-	public function postInstallScript($admin, $params){
-		//write your post install script here
-	}
 
 	/**
 	 * Write to env file
@@ -335,32 +345,6 @@ class InstallRepository {
 	}
 
 
-	/**
-	 * Insert default admin details
-	 */
-	public function makeAdmin($params) {
-        try{
-            $user_model_name = config('spondonit.user_model');
-            $user_class = new $user_model_name;
-            $user = $user_class->find(1);
-            if(!$user){
-               $user = new $user_model_name;
-            }
-            $user->name = 'Super admin';
-            $user->email = gv($params, 'email');
-            if(Schema::hasColumn('users', 'role_id')){
-                $user->role_id = 1;
-            }
-
-            $user->password = bcrypt(gv($params, 'password', 'abcd1234'));
-            $user->save();
-        } catch(\Exception $e){
-            $this->rollbackDb();
-            throw ValidationException::withMessages(['message' => $e->getMessage()]);
-        }
-
-
-	}
 
 	public function installModule($params){
 

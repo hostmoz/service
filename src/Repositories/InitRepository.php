@@ -9,22 +9,12 @@ use Illuminate\Support\Facades\Storage;
 class InitRepository {
 
     public function init() {
-		config(['app.item' => config('spondonit.item_id')]);
 		config(['app.verifier' => 'http://auth.uxseven.com']);
     }
 
-    public function config()
-	{
-		$config = collect();
-
-		// write your code here which need to load berfore request
-
-		return $config;
-	}
-
+  
     public function checkDatabase(){
         
-       
         try {
 	        DB::connection()->getPdo();
 
@@ -49,8 +39,6 @@ class InitRepository {
     }
 
     public function check() {
-
-        
 
 		if (isTestMode()) {
 			return;

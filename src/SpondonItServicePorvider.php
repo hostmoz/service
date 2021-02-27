@@ -15,7 +15,6 @@ class SpondonItServicePorvider extends ServiceProvider{
 
         $this->publishes([
             __DIR__.'/../public' => public_path('vendor/spondonit'),
-             __DIR__.'/../config/spondonit.php' => config_path('spondonit.php'),
              __DIR__.'/../resources/views' => resource_path('views/vendors/service'),
         ], 'spondonit');
        

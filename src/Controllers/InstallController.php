@@ -20,18 +20,6 @@ class InstallController extends Controller{
         $this->request = $request;
     }
 
-    public function index(){
-        
-        $ac = Storage::exists('.app_installed') ? Storage::get('.app_installed') : null;
-        if($ac){
-            abort(404);
-        } else{
-            if($this->repo->checkPreviousInstallation()){
-                return redirect('/')->send();
-            }
-        }
-        return view('service::install.welcome');
-    }
 
     public function preRequisite(){
   
@@ -90,23 +78,6 @@ class InstallController extends Controller{
 		return response()->json(['message' => __('service::install.connection_established'), 'goto' => route('service.user')]);
     }
 
-    public function user(){
-        $ac = Storage::exists('.temp_app_installed') ? Storage::get('.temp_app_installed') : null;
-
-        if(!$this->repo->checkDatabaseConnection() || !$ac){
-            abort(404);
-        }
-       
-		return view('service::install.user');
-    }
-
-    public function post_user(UserRequest $request){
-       
-        $this->repo->install($request->all());
-        Storage::put('.user_email', $request->email);
-        Storage::put('.user_pass', $request->password);
-		return response()->json(['message' => __('service::install.done_msg'), 'goto' => route('service.done')]);
-    }
 
     public function done(){
 
