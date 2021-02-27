@@ -269,8 +269,6 @@ class InstallRepository {
 
 		}
 		
-
-        Artisan::call('key:generate', ['--force' => true]);
         
         $ac = Storage::exists('.temp_app_installed') ? Storage::get('.temp_app_installed') : null;
         Storage::put('.app_installed', $ac);
@@ -279,11 +277,7 @@ class InstallRepository {
 
         Storage::delete('.temp_app_installed');
 
-
-        envu([
-            'APP_ENV' => 'production',
-            'APP_DEBUG'     =>  'false',
-        ]);
+ 		
 	}
 
 
