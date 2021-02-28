@@ -1,10 +1,10 @@
 <?php
 
-namespace SpondonIt\AdvocateService;
+namespace SpondonIt\Service;
 
 use Illuminate\Support\ServiceProvider;
 
-class SpondonItServicePorvider extends ServiceProvider
+class SpondonItServiceProvider extends ServiceProvider
 {
     /**
      * Register any application services.
