@@ -12,16 +12,16 @@ class InitRepository {
 		config(['app.verifier' => 'http://auth.uxseven.com']);
     }
 
-  
+
     public function checkDatabase(){
-        
+
         try {
 	        DB::connection()->getPdo();
 
             if(!Schema::hasTable(config('spondonit.settings_table')) || !Schema::hasTable('users')){
 			    return false;
             }
-            
+
         } catch(\Exception $e){
             $error = $e->getCode();
             if($error == 2002){
@@ -32,7 +32,7 @@ class InitRepository {
                         return abort(403, 'Access denied for user. Please check your database username and password.');
                     }
                 }
-            } 
+            }
         }
 
         return true;
@@ -68,14 +68,16 @@ class InitRepository {
 		$url = config('app.verifier') . '/api/cc?a=verify&u=' . $_SERVER['HTTP_HOST'] . '&ac=' . $ac . '&i=' . config('app.item') . '&e=' . $e . '&c=' . $c . '&v=' . $v;
 		$response = curlIt($url);
 
-		$status = gbv($response, 'status');
+		if($response){
+            $status = gbv($response, 'status');
 
-		if (!$status) {
-			Storage::delete(['.access_code', '.account_email']);
-			Storage::put('.app_installed', '');
-		} else {
-			Storage::put('.access_log', date('Y-m-d'));
-		}
+            if (!$status) {
+                Storage::delete(['.access_code', '.account_email']);
+                Storage::put('.app_installed', '');
+            } else {
+                Storage::put('.access_log', date('Y-m-d'));
+            }
+        }
     }
 
 }

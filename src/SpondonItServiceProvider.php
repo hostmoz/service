@@ -1,12 +1,28 @@
 <?php
 
-namespace SpondonIt\Service;
+namespace SpondonIt\AdvocateService;
 
 use Illuminate\Support\ServiceProvider;
 
-class SpondonItServicePorvider extends ServiceProvider{
+class SpondonItServiceProvider extends ServiceProvider
+{
+    /**
+     * Register any application services.
+     *
+     * @return void
+     */
+    public function register()
+    {
+        //
+    }
 
-    public function boot(){
+    /**
+     * Bootstrap any application services.
+     *
+     * @return void
+     */
+    public function boot()
+    {
         $this->loadRoutesFrom(__DIR__.'/../routes/web.php');
         $this->loadTranslationsFrom(__DIR__.'/../resources/lang', 'service');
         $this->loadViewsFrom(resource_path('/views/vendors/service'), 'service');
@@ -16,13 +32,6 @@ class SpondonItServicePorvider extends ServiceProvider{
             __DIR__.'/../public' => public_path('vendor/spondonit'),
              __DIR__.'/../resources/views' => resource_path('views/vendors/service'),
         ], 'spondonit');
-       
-    }
-
-    public function register()
-    {
-
     }
 }
 
-?>
