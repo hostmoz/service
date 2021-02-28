@@ -4,7 +4,7 @@ namespace SpondonIt\AdvocateService;
 
 use Illuminate\Support\ServiceProvider;
 
-class SpondonItServiceProvider extends ServiceProvider
+class SpondonItServicePorvider extends ServiceProvider
 {
     /**
      * Register any application services.
