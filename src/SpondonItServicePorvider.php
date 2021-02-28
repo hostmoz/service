@@ -1,6 +1,5 @@
 <?php
 
-
 namespace SpondonIt\Service;
 
 use Illuminate\Support\ServiceProvider;
