@@ -244,6 +244,7 @@ class InstallRepository {
 		$status = gbv($response, 'status');
     
 		if (!$status) {
+			\Log::info('License Verification failed');
 			Storage::delete(['.access_code', '.account_email']);
 			Storage::put('.temp_app_installed', '');
 			return false;

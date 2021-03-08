@@ -54,6 +54,7 @@ class InitRepository {
 
 		$database = $this->checkDatabase();
 		if (!$database) {
+             \Log::info('Table not found');
 			Storage::delete(['.access_code', '.account_email']);
 			Storage::put('.app_installed', '');
 			Storage::put('.access_log', date('Y-m-d'));
@@ -72,6 +73,7 @@ class InitRepository {
             $status = gbv($response, 'status');
 
             if (!$status) {
+                \Log::info('Initial License Verification failed');
                 Storage::delete(['.access_code', '.account_email']);
                 Storage::put('.app_installed', '');
             } else {
