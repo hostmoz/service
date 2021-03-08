@@ -263,12 +263,12 @@ class InstallRepository {
 
 		$this->migrateDB();
 
-		File::cleanDirectory('storage/app/public');
-		try{
-			Artisan::call('storage:link');
-		} catch (Exception $e){
+		// File::cleanDirectory('storage/app/public');
+		// try{
+		// 	Artisan::call('storage:link');
+		// } catch (Exception $e){
 
-		}
+		// }
 		
         
         $ac = Storage::exists('.temp_app_installed') ? Storage::get('.temp_app_installed') : null;
