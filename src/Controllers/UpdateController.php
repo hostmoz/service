@@ -1,4 +1,5 @@
 <?php
+
 namespace SpondonIt\Service\Controllers;
 
 use Illuminate\Support\Str;
@@ -33,7 +34,7 @@ class UpdateController extends Controller
     public function download()
     {
         $release = $this->repo->download();
-        return response()->json(['message' => trans('service::install.update_downloaded'), 'goto' => route('service.update')]);
+        return response()->json(['message' => trans('service::install.updated'), 'goto' => route('service.update')]);
     }
 
     public function update()

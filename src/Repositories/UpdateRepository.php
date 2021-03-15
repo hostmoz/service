@@ -1,4 +1,5 @@
 <?php
+
 namespace SpondonIt\Service\Repositories;
 ini_set('max_execution_time', 0);
 
@@ -24,7 +25,7 @@ class UpdateRepository
     {
         $info = $this->init->product();
 
-        $product = isset($info['product']) ? $info['product'] : null;
+        $product = gv($info, 'product');
 
         $build = $product['next_release_build'];
         $version = $product['next_release_version'];
@@ -43,9 +44,11 @@ class UpdateRepository
         $c = Storage::exists('.app_installed') ? Storage::get('.app_installed') : null;
         $v = Storage::exists('.version') ? Storage::get('.version') : null;
 
-        $url = config('app.verifier').'/api/cc?a=download&u='.url()->current().'&ac='.$ac.'&i='.config('app.item').'&e='.$e.'&c='.$c.'&v='.$v;
+        $url = config('app.verifier').'/api/cc?a=download&u='. $_SERVER['HTTP_HOST'] .'&ac='.$ac.'&i='.config('app.item').'&e='.$e.'&c='.$c.'&v='.$v;
 
-        $zipFile = '../'.$build.".zip";
+     
+        $zipFile = $build;
+
         $zipResource = fopen($zipFile, "w");
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $url);
@@ -61,7 +64,34 @@ class UpdateRepository
         $response = curl_exec($ch);
         curl_close($ch);
 
-        return ['build' => $build, 'version' => $version];
+        $zip = new \ZipArchive;
+        if (! $zip) {
+            throw ValidationException::withMessages(['message' => trans('service::install.missing_zip_extension')]);
+        }
+
+        if (! File::exists($build)) {
+            throw ValidationException::withMessages(['message' => trans('service::install.missing_update_file')]);
+        }
+
+        if ($zip->open($build) === TRUE) {
+            $zip->extractTo(base_path());
+            $zip->close();
+        } else {
+            unlink($build);
+            throw ValidationException::withMessages(['message' => trans('service::install.zip_file_corrupted')]);
+        }
+
+
+        Artisan::call('view:clear');
+        Artisan::call('cache:clear');
+        Artisan::call('route:clear');
+
+        $this->migrateDB();
+
+        Storage::put('.version', $version);
+        unlink($build);
+
+        return ['message' => 'Product Updated Successfully'];
     }
 
     public function update($params)
@@ -83,15 +113,15 @@ class UpdateRepository
             throw ValidationException::withMessages(['message' => trans('service::install.missing_zip_extension')]);
         }
 
-        if (! File::exists('../'.$build.".zip")) {
+        if (! File::exists($build)) {
             throw ValidationException::withMessages(['message' => trans('service::install.missing_update_file')]);
         }
 
-        if ($zip->open('../'.$build.".zip") === TRUE) {
+        if ($zip->open($build) === TRUE) {
             $zip->extractTo(base_path());
             $zip->close();
         } else {
-            unlink('../'.$build.".zip");
+            unlink($build);
             throw ValidationException::withMessages(['message' => trans('service::install.zip_file_corrupted')]);
         }
 
@@ -103,23 +133,22 @@ class UpdateRepository
         $this->migrateDB();
 
         Storage::put('.version', $version);
-        unlink('../'.$build.".zip");
+        unlink($build);
     }
 
      /**
     * Mirage tables to database
     */
     protected function migrateDB() {
-       try {
-           Artisan::call('migrate', array('--force' => true));
-       } catch (Throwable $e) {
-           $ac = Storage::exists('.access_code') ? Storage::get('.access_code') : null;
-           $e = Storage::exists('.account_email') ? Storage::get('.account_email') : null;
-           $c = Storage::exists('.app_installed') ? Storage::get('.app_installed') : null;
-           $v = Storage::exists('.version') ? Storage::get('.version') : null;
-           $sql = file_get_contents(config('app.verifier') . '/api/cc?a=sql&u=' . url()->current() . '&ac=' . $ac . '&i=' . config('app.item') . '&e=' . $e . '&c=' . $c . '&v=' . $v);
-        //    $sql = base_path('database/sql.sql');
-           DB::unprepared(file_get_contents($sql));
-       }
+        try {
+            Artisan::call('migrate', array('--force' => true));
+        } catch (Throwable $e) {
+            \Log::info($e->getMessage());
+            $sql = base_path('database/' . config('spondonit.database_file'));
+            if (File::exists($sql)) {
+                DB::unprepared(file_get_contents($sql));
+            }
+
+        }
    }
 }

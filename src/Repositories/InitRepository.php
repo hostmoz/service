@@ -82,4 +82,53 @@ class InitRepository {
         }
     }
 
+     public function product() {
+        if (!isConnected()) {
+            throw ValidationException::withMessages(['message' => 'No internect connection.']);
+        }
+
+        $ac = Storage::exists('.access_code') ? Storage::get('.access_code') : null;
+        $e = Storage::exists('.account_email') ? Storage::get('.account_email') : null;
+        $c = Storage::exists('.app_installed') ? Storage::get('.app_installed') : null;
+        $v = Storage::exists('.version') ? Storage::get('.version') : null;
+
+        $about = file_get_contents(config('app.verifier') . '/about');
+        $update_tips = file_get_contents(config('app.verifier') . '/update-tips');
+        $support_tips = file_get_contents(config('app.verifier') . '/support-tips');
+
+        $url = config('app.verifier') . '/api/cc?a=product&u=' .  $_SERVER['HTTP_HOST'] . '&ac=' . $ac . '&i=' . config('app.item') . '&e=' . $e . '&c=' . $c . '&v=' . $v;
+
+    
+        $response = curlIt($url);
+  
+        $status = gbv($response, 'status');
+   
+        if (!$status) {
+            
+            abort(404);
+        }
+
+        $product = gv($response, 'product', []);
+
+        $next_release_build = gv($product, 'next_release_build');
+
+        $is_downloaded = 0;
+        if ($next_release_build) {
+            if (File::exists( $next_release_build)) {
+                $is_downloaded = 1;
+            }
+        }
+
+        if (isTestMode()) {
+            $product['purchase_code'] = config('system.hidden_field');
+            $product['email'] = config('system.hidden_field');
+            $product['access_code'] = config('system.hidden_field');
+            $product['checksum'] = config('system.hidden_field');
+
+            $is_downloaded = 0;
+        }
+
+        return compact('about', 'product', 'update_tips', 'support_tips', 'is_downloaded');
+    }
+
 }
