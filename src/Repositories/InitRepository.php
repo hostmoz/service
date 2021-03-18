@@ -65,8 +65,7 @@ class InitRepository {
 
             if (!$status) {
                 \Log::info('Initial License Verification failed. Message: '. gv($response, 'message'));
-                Toastr::error(gv($response, 'message'));
-
+                
                 Storage::delete(['.access_code', '.account_email']);
                 Storage::put('.app_installed', '');
                 \Auth::logout();
