@@ -52,15 +52,6 @@ class InitRepository {
 			return;
 		}
 
-		$database = $this->checkDatabase();
-		if (!$database) {
-             \Log::info('Table not found');
-			Storage::delete(['.access_code', '.account_email']);
-			Storage::put('.app_installed', '');
-			Storage::put('.access_log', date('Y-m-d'));
-			return;
-		}
-
 		$ac = Storage::exists('.access_code') ? Storage::get('.access_code') : null;
 		$e = Storage::exists('.account_email') ? Storage::get('.account_email') : null;
 		$c = Storage::exists('.app_installed') ? Storage::get('.app_installed') : null;
@@ -73,9 +64,13 @@ class InitRepository {
             $status = gbv($response, 'status');
 
             if (!$status) {
-                \Log::info('Initial License Verification failed');
+                \Log::info('Initial License Verification failed. Message: '. gv($response, 'message'));
+                Toastr::error(gv($response, 'message'));
+
                 Storage::delete(['.access_code', '.account_email']);
                 Storage::put('.app_installed', '');
+                \Auth::logout();
+                return redirect()->route('service.install')->send();
             } else {
                 Storage::put('.access_log', date('Y-m-d'));
             }

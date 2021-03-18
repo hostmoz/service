@@ -3,6 +3,7 @@
 namespace SpondonIt\Service;
 
 use Illuminate\Support\ServiceProvider;
+use SpondonIt\Service\Middleware\ServiceMiddleware;
 
 class SpondonItServiceProvider extends ServiceProvider
 {
@@ -23,6 +24,10 @@ class SpondonItServiceProvider extends ServiceProvider
      */
     public function boot()
     {
+        $router = $this->app['router'];
+        $router->pushMiddlewareToGroup('web', ServiceMiddleware::class);
+
+
         $this->loadRoutesFrom(__DIR__.'/../routes/web.php');
         $this->loadTranslationsFrom(__DIR__.'/../resources/lang', 'service');
         $this->loadViewsFrom(resource_path('/views/vendors/service'), 'service');
