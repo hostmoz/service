@@ -1,4 +1,5 @@
 <?php
+
 namespace SpondonIt\Service\Repositories;
 ini_set('max_execution_time', -1);
 
