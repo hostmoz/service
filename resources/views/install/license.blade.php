@@ -27,10 +27,15 @@
                         <label class="required" for="installed_domain">{{ __('service::install.installed_domain') }}</label>
                         <input type="text" class="form-control" name="installed_domain" id="installed_domain" required="required" readonly value="{{ app_url() }}" >
                     </div>
-
-                   {{--  <p class="text-center">
-                        <a href={{ config('app.verifier') }} class="">{{ __('service::install.get_access_code')}}</a>
-                    </p> --}}
+                    @if($reinstall)
+                   <div class="form-group">
+                        <label data-id="bg_option" class="primary_checkbox d-flex mr-12 ">
+                            <input name="re_install" type="checkbox">
+                            <span class="checkmark"></span>
+                            <span class="ml-2">Re install System</span>
+                        </label>
+                    </div>
+                    @endif
 
                    <button type="submit" class="offset-3 col-sm-6 primary-btn fix-gr-bg mt-40 submit" style="background-color: rebeccapurple;color: whitesmoke">{{ __('service::install.lets_go_next') }}</button>
                    <button type="button" class="offset-3 col-sm-6 primary-btn fix-gr-bg mt-40 submitting" disabled style="background-color: rebeccapurple;color: whitesmoke; display:none">{{ __('service::install.submitting') }}</button>

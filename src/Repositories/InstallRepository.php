@@ -55,6 +55,10 @@ class InstallRepository {
 		}
 	}
 
+	public function checkReinstall(){
+	    return (Storage::exists('.install_count') ? Storage::get('.install_count') : 0) and (\Artisan::call('spondonit:migrate-status'));
+    }
+
 
 	/**
 	 * Used to check whether pre requisites are fulfilled or not and returns array of success/error type with message
@@ -63,7 +67,7 @@ class InstallRepository {
 
 		try {
 	        DB::connection()->getPdo();
-            
+
 	        if(Schema::hasTable(config('spondonit.settings_table')) && Schema::hasTable('users')){
 		        $settings_model_name = config('spondonit.settings_model');
 		        $settings_model = new $settings_model_name;
@@ -143,13 +147,13 @@ class InstallRepository {
         if(!gbv($params, 'force_migrate')){
             $count_table_query = mysqli_query($link, "show tables");
             $count_table = mysqli_num_rows($count_table_query);
-    
+
             if ($count_table) {
                 throw ValidationException::withMessages(['message' => trans('service::install.existing_table_in_database')]);
             }
-    
-        } 
-        
+
+        }
+
         $this->setDBEnv($params);
 
         if(gbv($params, 'force_migrate')){
@@ -177,7 +181,7 @@ class InstallRepository {
         if (!$select_db) {
 			return false;
 		}
-        
+
         $count_table_query = mysqli_query($link, "show tables");
 		$count_table = mysqli_num_rows($count_table_query);
 
@@ -185,7 +189,7 @@ class InstallRepository {
 			return false;
 		}
 
-		
+
         return true;
     }
 
@@ -200,8 +204,6 @@ class InstallRepository {
         }
 
        $url = config('app.verifier') . '/api/cc?a=install&u=' . $_SERVER['HTTP_HOST'] . '&ac=' . request('access_code') . '&i=' . config('app.item') . '&e=' . request('envato_email');
-
-
 
         $response = curlIt($url);
 
@@ -243,7 +245,7 @@ class InstallRepository {
 		$response = curlIt($url);
 
 		$status = gbv($response, 'status');
-    
+
 		if (!$status) {
 			\Log::info('License Verification failed');
 			Storage::delete(['.access_code', '.account_email']);
@@ -270,8 +272,8 @@ class InstallRepository {
 		// } catch (Exception $e){
 
 		// }
-		
-        
+
+
         $ac = Storage::exists('.temp_app_installed') ? Storage::get('.temp_app_installed') : null;
         Storage::put('.app_installed', $ac);
 		Storage::put('.user_email', gv($params, 'email'));
@@ -279,7 +281,7 @@ class InstallRepository {
 
         Storage::delete('.temp_app_installed');
 
- 		
+
 	}
 
 

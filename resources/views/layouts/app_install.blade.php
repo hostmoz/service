@@ -3,9 +3,7 @@
 
 <head>
     @php
-      
         $base_path = 'vendor/spondonit';
-        
     @endphp
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -14,7 +12,6 @@
     <title>{{ isset($title) ? $title .' | '. config('app.name') :  config('app.name') }}</title>
 
     <link rel="stylesheet" href="{{ asset($base_path . '/css/bootstrap.min.css') }}">
-    <link rel="stylesheet" href="{{ asset($base_path . '/css/style.css') }}">
     <link rel="stylesheet" href="{{ asset($base_path . '/css/infix.css') }}">
     <link rel="stylesheet" href="{{ asset($base_path . '/css/themify-icons.css') }}">
     <link rel="stylesheet" href="{{ asset($base_path . '/css/toastr.min.css') }}">
@@ -51,9 +48,8 @@
         </div>
     </div>
 
-    <script src="{{ asset($base_path . '/js/jquery-3.2.1.min.js') }}"></script>
-    <script src="{{ asset($base_path . '/js/popper.js') }}"></script>
-    <script src="{{ asset($base_path . '/js/bootstrap.min.js') }}"></script>
+    <script type="text/javascript" src="{{ asset($base_path . '/js/jquery-3.6.0.min.js') }}"></script>
+    <script type="text/javascript" src="{{ asset($base_path . '/js/bootstrap.bundle.min.js') }}"></script>
     <script src="{{ asset($base_path . '/js/toastr.min.js') }}"></script>
     <script src="{{ asset($base_path . '/js/parsley.min.js') }}"></script>
     <script src="{{ asset($base_path . '/js/function.js') }}"></script>

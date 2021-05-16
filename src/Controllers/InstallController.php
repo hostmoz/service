@@ -22,7 +22,7 @@ class InstallController extends Controller{
 
 
     public function preRequisite(){
-  
+
         $ac = Storage::exists('.app_installed') ? Storage::get('.app_installed') : null;
         if($ac){
             abort(404);
@@ -40,7 +40,7 @@ class InstallController extends Controller{
     }
 
     public function license(){
-   
+
         $checks = $this->repo->getPreRequisite();
         if(in_array(false, $checks)){
             return redirect()->route('service.preRequisite')->with(['message' => __('service::install.requirement_failed'), 'status' => 'error']);
@@ -51,17 +51,29 @@ class InstallController extends Controller{
             abort(404);
         }
 
-		return view('service::install.license');
+        $reinstall = $this->repo->checkReinstall();
+
+		return view('service::install.license', compact('reinstall'));
     }
 
     public function post_license(LicenseRequest $request){
         $this->repo->validateLicense($request->all());
         session()->flash('license', 'verified');
-		return response()->json(['message' => __('service::install.valid_license'), 'goto' => route('service.database')]);
+        $goto = route('service.database');
+        $message = __('service::install.valid_license');
+        if (request('re_install') and $this->repo->checkReinstall()){
+            Storage::put('.app_installed', Storage::get('.temp_app_installed'));
+            Storage::delete('.temp_app_installed');
+            Storage::put('.install_count', Storage::get('.install_count') + 1);
+            $goto = url('/');
+            $message = __('service::install.re_installation_process_complete');
+        }
+
+		return response()->json(['message' => $message, 'goto' => $goto]);
     }
 
     public function database(){
-        
+
         $ac = Storage::exists('.temp_app_installed') ? Storage::get('.temp_app_installed') : null;
         if(!$ac){
             abort(404);
@@ -87,12 +99,12 @@ class InstallController extends Controller{
         if($data['user'] and $data['pass']){
             \Log::info('done');
             Storage::delete(['.user_email', '.user_pass']);
+            Storage::put('.install_count', 1);
             return view('service::install.done', $data);
         } else{
             abort(404);
         }
 
-		
     }
 
      public function ManageAddOnsValidation(ModuleInstallRequest $request){
@@ -100,7 +112,7 @@ class InstallController extends Controller{
         return response()->json(['message' => __('service::install.module_verify'), 'reload' => true]);
     }
 
-    
+
 
 
 }

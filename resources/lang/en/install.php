@@ -71,5 +71,6 @@ return array(
 "module_verify" => "Module Verified Successfully",
 "purchase_code" => 'Purchase Code',
 "installed_domain" => "Installation domain",
-"error" => 'Something Wrong'
+"error" => 'Something Wrong',
+"re_installation_process_complete" => 'Re Installation process successfully completed.'
 );
