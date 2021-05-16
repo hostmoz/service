@@ -56,7 +56,14 @@ class InstallRepository {
 	}
 
 	public function checkReinstall(){
-	    return (Storage::exists('.install_count') ? Storage::get('.install_count') : 0) and (\Artisan::call('spondonit:migrate-status'));
+        try {
+            DB::connection()->getPdo();
+            return (Storage::exists('.install_count') ? Storage::get('.install_count') : 0) and (\Artisan::call('spondonit:migrate-status'));
+        } catch (\Exception $e) {
+            return false;
+        }
+
+
     }
 
 
