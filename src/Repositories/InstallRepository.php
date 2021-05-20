@@ -355,6 +355,7 @@ class InstallRepository {
 
         $code = gv($params, 'purchase_code');
         $name = gv($params, 'name');
+        $e = gv($params, 'envatouser');
 
 
         $dataPath = base_path('Modules/' . $name . '/' . $name . '.json');
@@ -364,7 +365,7 @@ class InstallRepository {
 
         $item_id = $array[$name]['item_id'];
 
-        $e = Storage::exists('.account_email') ? Storage::get('.account_email') : null;
+//        $e = Storage::exists('.account_email') ? Storage::get('.account_email') : null;
 
         $url = config('app.verifier') . '/api/cc?a=install&u=' . $_SERVER['HTTP_HOST'] . '&ac=' . $code  . '&i=' .$item_id . '&e=' . $e.'&t=Module';
 

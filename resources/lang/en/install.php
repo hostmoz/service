@@ -72,5 +72,6 @@ return array(
 "purchase_code" => 'Purchase Code',
 "installed_domain" => "Installation domain",
 "error" => 'Something Wrong',
-"re_installation_process_complete" => 'Re Installation process successfully completed.'
+"re_installation_process_complete" => 'Re Installation process successfully completed.',
+"envatouser" => 'Envato Email Address'
 );

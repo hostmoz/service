@@ -23,12 +23,13 @@ class ModuleInstallRequest extends FormRequest
      */
     public function rules()
     {
-       
+
         $rules = array();
 
         $rules = [
             'purchase_code'     => 'required',
-            'name'               => 'required',
+            'name'              => 'required',
+            'envatouser'        => 'required|email',
 
         ];
 
@@ -45,7 +46,8 @@ class ModuleInstallRequest extends FormRequest
     {
         return [
             'purchase_code'         => trans('service::install.purchase_code'),
-            'name'         => trans('service::install.module_name')
+            'name'                  => trans('service::install.module_name'),
+            'envatouser'            => trans('service::install.envatouser')
         ];
     }
 }
