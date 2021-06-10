@@ -356,6 +356,8 @@ class InstallRepository {
         $code = gv($params, 'purchase_code');
         $name = gv($params, 'name');
         $e = gv($params, 'envatouser');
+//        $row = gbv($params, 'row', 1);
+        $row = true;
 
 
         $dataPath = base_path('Modules/' . $name . '/' . $name . '.json');
@@ -377,11 +379,18 @@ class InstallRepository {
         if ($status) {
 
             // added a new column in sm general settings
-            if (!Schema::hasColumn(config('spondonit.settings_table'), $name)) {
-                Schema::table(config('spondonit.settings_table'), function ($table) use ($name) {
-                    $table->integer($name)->default(1)->nullable();
-                });
+            if (!$row){
+                if (!Schema::hasColumn(config('spondonit.settings_table'), $name)) {
+                    Schema::table(config('spondonit.settings_table'), function ($table) use ($name) {
+                        $table->integer($name)->default(1)->nullable();
+                    });
+                }
+            } else{
+                $settings_model_name = config('spondonit.settings_model');
+                $settings_model = new $settings_model_name;
+                $config = $settings_model->firstOrCreate(['key' => $name]);
             }
+
 
             try {
 
@@ -409,9 +418,15 @@ class InstallRepository {
 
                 $settings_model_name = config('spondonit.settings_model');
                 $settings_model = new $settings_model_name;
-                $config = $settings_model->find(1);
-                $config->$name = 1;
-                $r = $config->save();
+                if ($row){
+                    $config = $settings_model->firstOrNew(['key' => $name]);
+                    $config->value = 1;
+                    $config->save();
+                } else{
+                    $config = $settings_model->find(1);
+                    $config->$name = 1;
+                    $config->save();
+                }
 
                 DB::commit();
 
@@ -420,21 +435,28 @@ class InstallRepository {
 
             } catch (\Exception $e) {
                 DB::rollback();
-                $this->disableModule($name);
+                $this->disableModule($name, $row);
                	throw ValidationException::withMessages(['message' => $e->getMessage()]);
             }
         } else {
-            $this->disableModule($name);
+            $this->disableModule($name, $row);
            	throw ValidationException::withMessages(['message' => gv($response, 'message', 'Something is not right')]);
         }
     }
 
-    protected function disableModule($module_name){
+    protected function disableModule($module_name, $row = false){
     	$settings_model_name = config('spondonit.settings_model');
     	$settings_model = new $settings_model_name;
-        $config = $settings_model->find(1);
-        $config->$module_name = 0;
-        $config->save();
+    	if ($row){
+            $config = $settings_model->firstOrNew(['key' => $module_name]);
+            $config->value = 0;
+            $config->save();
+        } else{
+            $config = $settings_model->find(1);
+            $config->$module_name = 0;
+            $config->save();
+        }
+
         $module_model_name = config('spondonit.module_model');
         $module_model = new $module_model_name;
         $ModuleManage = $module_model::find($module_name)->disable();
