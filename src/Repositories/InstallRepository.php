@@ -356,8 +356,8 @@ class InstallRepository {
         $code = gv($params, 'purchase_code');
         $name = gv($params, 'name');
         $e = gv($params, 'envatouser');
-//        $row = gbv($params, 'row', 1);
-        $row = true;
+       $row = gbv($params, 'row', 1);
+        // $row = true;
 
 
         $dataPath = base_path('Modules/' . $name . '/' . $name . '.json');
