@@ -4,6 +4,7 @@ namespace SpondonIt\Service\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use SpondonIt\Service\Repositories\InstallRepository;
 use SpondonIt\Service\Requests\DatabaseRequest;
@@ -97,7 +98,7 @@ class InstallController extends Controller{
         $data['pass'] = Storage::exists('.user_pass') ? Storage::get('.user_pass') : null;
 
         if($data['user'] and $data['pass']){
-            \Log::info('done');
+            Log::info('done');
             Storage::delete(['.user_email', '.user_pass']);
             Storage::put('.install_count', 1);
             return view('service::install.done', $data);

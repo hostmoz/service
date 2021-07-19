@@ -14,7 +14,7 @@
                     <div class="col-md-12">
                         @if(gv($product, 'name'))
                         <div class="add-visitor">
-                            <table style="width:100%; box-shadow: none;" class="display school-table school-table-style">
+                            <table class="display school-table school-table-style width-shadow">
                                 <tbody>
                                     <tr>
                                         <td>Current Installed Version</td>
@@ -28,7 +28,7 @@
                                         <td>Date of Release</td>
                                         <td>{{ gv($product, 'next_release_date') }}</td>
                                     </tr>
-                                    
+
                                     <tr>
                                             <td> {{__('setting.PHP Version')}}</td>
                                             <td>{{phpversion() }}</td>
@@ -61,15 +61,15 @@
                                             <td>{{__('setting.System Activated Date')}}</td>
                                             <td>{{ config('configs')->where('key','system_activated_date')->first()->value }}</td>
                                         </tr>
-                                    
+
                                 </tbody>
                             </table>
                         </div>
                         <div class="text-center">
-                            
+
                             <a href="{{ url('/') }}" class="primary-btn fix-gr-bg" > Back To Home </a>
-                   
-                      
+
+
 
                         </div>
                         @endif
@@ -82,7 +82,7 @@
                     <div class="col-md-12">
                         @if(gv($product, 'name'))
                         <div class="add-visitor">
-                            <table style="width:100%; box-shadow: none;" class="display school-table school-table-style">
+                            <table class="display school-table school-table-style width-shadow">
                                 <tbody>
                                     <tr>
                                         <td>Current Installed Version</td>
@@ -145,9 +145,9 @@
                             </table>
                         </div>
                         <div class="text-center">
-                            
+
                             <button type="button" class="primary-btn fix-gr-bg"  data-toggle="modal" data-target="#update_modal" data-modal-size="modal-md">Update</button>
-                      
+
 
                         </div>
                         @endif
@@ -186,9 +186,9 @@
                             </div>
                              <div class="col-md-12" id="on_progress" style="display: none;">
                                 <p class="text-center alert alert-danger">Don't perform any action till we are performing update!</p>
-                              
+
                                 <p class="text-center">Update Size ({{ bytesToSize(gv($product, 'next_release_size', 0)) }}) - Updating.....</p>
-                                
+
                             </div>
                              <div class="col-lg-12 text-center" >
                                 <div class="mt-40 d-flex justify-content-between">
@@ -198,7 +198,7 @@
 
                                     <button type="submit" class="primary-btn fix-gr-bg submit" id="update">Update</button>
                                     <button type="button" class="primary-btn fix-gr-bg submitting" style="display: none; " disabled="">Updating...</button>
-                                    
+
                                 </div>
                             </div>
                         </div>
@@ -212,7 +212,7 @@
 
 @stop
 @php
-       
+
     $base_path = 'public/vendor/spondonit';
 
 @endphp
@@ -225,8 +225,8 @@
         e.preventDefault();
         var form = $('#content_form');
         var url = form.attr('action');
-    
- 
+
+
         $('#download_buttons').hide();
         $('#on_progress').show();
         form.find('.submit').hide();

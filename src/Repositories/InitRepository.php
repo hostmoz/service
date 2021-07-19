@@ -2,16 +2,18 @@
 
 namespace SpondonIt\Service\Repositories;
 
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 
 class InitRepository {
 
     public function init() {
         config(['app.verifier' => 'http://auth.uxseven.com']);
     }
-
 
     public function checkDatabase(){
 
@@ -64,11 +66,11 @@ class InitRepository {
             $status = gbv($response, 'status');
 
             if (!$status) {
-                \Log::info('Initial License Verification failed. Message: '. gv($response, 'message'));
+                Log::info('Initial License Verification failed. Message: '. gv($response, 'message'));
 
                 Storage::delete(['.access_code', '.account_email']);
                 Storage::put('.app_installed', '');
-                \Auth::logout();
+                Auth::logout();
                 return redirect()->route('service.install')->send();
             } else {
                 Storage::put('.access_log', date('Y-m-d'));

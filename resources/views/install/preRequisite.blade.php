@@ -3,7 +3,7 @@
 @section('content')
 <div class="single-report-admit">
     <div class="card-header">
-        <h2 class="text-center text-uppercase" style="color: whitesmoke">{{ __('service::install.environment_title') }}
+        <h2 class="text-center text-uppercase color-whitesmoke" >{{ __('service::install.environment_title') }}
         </h2>
 
     </div>
@@ -23,8 +23,8 @@
                 }
             @endphp
             <div class="col-md-6">
-                <p style="font-size: 13px; padding:5px;"
-                    class="alert alert-{{ gv($server, 'type') == 'error' ? 'danger' : 'success' }}">
+                <p
+                    class="alert alert-font alert-{{ gv($server, 'type') == 'error' ? 'danger' : 'success' }}">
                     <i class="ti-{{ gv($server, 'type') == 'error' ? 'na' : 'check-box' }} mr-1"></i>
                     {{ gv($server, 'message') }}
                 </p>
@@ -41,8 +41,8 @@
                 }
             @endphp
             <div class="col-md-6">
-                <p style="font-size: 13px; padding:5px;"
-                    class="alert alert-{{ gv($folder, 'type') == 'error' ? 'danger' : 'success' }}">
+                <p
+                    class="alert-font alert alert-{{ gv($folder, 'type') == 'error' ? 'danger' : 'success' }}">
                     <i class="ti-{{ gv($folder, 'type') == 'error' ? 'na' : 'check-box' }} mr-1"></i>
                     {{ gv($folder, 'message') }}
                 </p>

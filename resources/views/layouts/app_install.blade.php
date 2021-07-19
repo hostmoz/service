@@ -12,7 +12,7 @@
     <title>{{ isset($title) ? $title .' | '. config('app.name') :  config('app.name') }}</title>
 
     <link rel="stylesheet" href="{{ asset($base_path . '/css/bootstrap.min.css') }}">
-    <link rel="stylesheet" href="{{ asset($base_path . '/css/infix.css') }}">
+    <link rel="stylesheet" href="{{ asset($base_path . '/css/spondonit.css') }}">
     <link rel="stylesheet" href="{{ asset($base_path . '/css/themify-icons.css') }}">
     <link rel="stylesheet" href="{{ asset($base_path . '/css/toastr.min.css') }}">
     <link rel="stylesheet" href="{{ asset($base_path . '/css/parsley.css') }}">

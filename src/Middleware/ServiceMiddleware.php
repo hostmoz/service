@@ -3,6 +3,7 @@
 namespace SpondonIt\Service\Middleware;
 
 use Closure;
+use Illuminate\Support\Facades\Auth;
 use SpondonIt\Service\Repositories\InitRepository as ServiceRepository;
 use Illuminate\Support\Facades\Storage;
 
@@ -25,14 +26,14 @@ class ServiceMiddleware
      */
     public function handle($request, Closure $next)
     {
-        $logout = \Storage::exists('.logout') ? \Storage::get('.logout') : false;
+        $logout = Storage::exists('.logout') && Storage::get('.logout');
         if ($logout) {
             $request->session()->flush();
-            \Storage::delete('.logout');
+            Storage::delete('.logout');
             return redirect('/install');
         }
 
-        if (\Auth::check() and \Auth::user()->role_id == 1) {
+        if (Auth::check() and Auth::user()->role_id == 1) {
             $this->service_repo->check();
         }
 

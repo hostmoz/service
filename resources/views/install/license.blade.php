@@ -3,7 +3,7 @@
 @section('content')
 <div class="single-report-admit">
     <div class="card-header">
-        <h2 class="text-center text-uppercase" style="color: whitesmoke">{{ __('service::install.license_verification') }}
+        <h2 class="text-center text-uppercase color-whitesmoke" >{{ __('service::install.license_verification') }}
         </h2>
 
     </div>
@@ -37,8 +37,8 @@
                     </div>
                     @endif
 
-                   <button type="submit" class="offset-3 col-sm-6 primary-btn fix-gr-bg mt-40 submit" style="background-color: rebeccapurple;color: whitesmoke">{{ __('service::install.lets_go_next') }}</button>
-                   <button type="button" class="offset-3 col-sm-6 primary-btn fix-gr-bg mt-40 submitting" disabled style="background-color: rebeccapurple;color: whitesmoke; display:none">{{ __('service::install.submitting') }}</button>
+                   <button type="submit" class="offset-3 col-sm-6 primary-btn fix-gr-bg mt-40 submit bc-color" >{{ __('service::install.lets_go_next') }}</button>
+                   <button type="button" class="offset-3 col-sm-6 primary-btn fix-gr-bg mt-40 submitting bc-color" disabled style="display:none">{{ __('service::install.submitting') }}</button>
                 </form>
             </div>
 

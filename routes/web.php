@@ -10,16 +10,13 @@ Route::group(['namespace' => 'SpondonIt\Service\Controllers', 'middleware' => 'w
         Route::post('license', 'InstallController@post_license');
         Route::get('database', 'InstallController@database')->name('service.database');
         Route::post('database', 'InstallController@post_database');
-        
         Route::get('done', 'InstallController@done')->name('service.done');
     });
 
     Route::get('/update', 'UpdateController@index')->name('service.update');
     Route::post('/update', 'UpdateController@update');
     Route::post('/download', 'UpdateController@download')->name('service.delete');
-
     Route::post('/revoke', 'LicenseController@revoke')->name('service.revoke');
-
     Route::post('/install-adons', 'InstallController@ManageAddOnsValidation')->name('ManageAddOnsValidation');
 
 });

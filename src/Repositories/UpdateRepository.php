@@ -6,6 +6,7 @@ ini_set('max_execution_time', 0);
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use SpondonIt\Service\Repositories\InitRepository;
 use Illuminate\Validation\ValidationException;
@@ -46,7 +47,7 @@ class UpdateRepository
 
         $url = config('app.verifier').'/api/cc?a=download&u='. $_SERVER['HTTP_HOST'] .'&ac='.$ac.'&i='.config('app.item').'&e='.$e.'&c='.$c.'&v='.$v;
 
-     
+
         $zipFile = $build;
 
         $zipResource = fopen($zipFile, "w");
@@ -98,10 +99,10 @@ class UpdateRepository
     {
         $info = $this->init->product();
 
-        $product = isset($info['product']) ? $info['product'] : null;
+        $product = $info['product'] ?? null;
 
-        $build = isset($params['build']) ? $params['build'] : null;
-        $version = isset($params['version']) ? $params['version'] : null;
+        $build = $params['build'] ?? null;
+        $version = $params['version'] ?? null;
 
 
         if (! $product['next_release_version'] || $build != $product['next_release_build'] || $version != $product['next_release_version']) {
@@ -143,7 +144,7 @@ class UpdateRepository
         try {
             Artisan::call('migrate', array('--force' => true));
         } catch (Throwable $e) {
-            \Log::info($e->getMessage());
+            Log::info($e->getMessage());
             $sql = base_path('database/' . config('spondonit.database_file'));
             if (File::exists($sql)) {
                 DB::unprepared(file_get_contents($sql));

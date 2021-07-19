@@ -3,7 +3,8 @@
 namespace SpondonIt\Service\Repositories;
 ini_set('max_execution_time', -1);
 
-
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Throwable;
 
@@ -27,9 +28,9 @@ class LicenseRepository {
         $url = config('app.verifier') . '/api/cc?a=remove&u=' . $_SERVER['HTTP_HOST'] . '&ac=' . $ac . '&i=' . config('app.item') . '&e=' . $e . '&c=' . $c . '&v=' . $v;
         $response = curlIt($url);
 
-        \Auth::logout();
+        Auth::logout();
 
-		\Artisan::call('db:wipe', ['--force' => true]);
+		Artisan::call('db:wipe', ['--force' => true]);
 
 		envu([
             'DB_PORT' => '3306',
@@ -41,6 +42,6 @@ class LicenseRepository {
 
         Storage::delete(['.access_code', '.account_email']);
         Storage::put('.app_installed', '');
-        
+
     }
 }

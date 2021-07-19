@@ -3,155 +3,164 @@
 namespace SpondonIt\Service\Repositories;
 ini_set('max_execution_time', -1);
 
+use Exception;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Schema;
 use Throwable;
 
-class InstallRepository {
-	/**
-	 * Instantiate a new controller instance.
-	 *
-	 * @return void
-	 */
-	public function __construct() {
-
-	}
-
-	public function checkInstallation(){
-		$ac = Storage::exists('.app_installed') ? Storage::get('.app_installed') : null;
-        if($ac){
-            abort(404);
-        } else{
-            if($this->checkPreviousInstallation()){
-                return redirect('/')->send();
-            }
-        }
-	}
-
-	/**
-	 * Used to compare version of PHP
-	 */
-	public function my_version_compare($ver1, $ver2, $operator = null) {
-		$p = '#(\.0+)+($|-)#';
-		$ver1 = preg_replace($p, '', $ver1);
-		$ver2 = preg_replace($p, '', $ver2);
-		return isset($operator) ?
-		version_compare($ver1, $ver2, $operator) :
-		version_compare($ver1, $ver2);
-	}
-
-	/**
-	 * Used to check whether pre requisites are fulfilled or not and returns array of success/error type with message
-	 */
-	public function check($boolean, $message, $help = '', $fatal = false) {
-		if ($boolean) {
-			return array('type' => 'success', 'message' => $message);
-		} else {
-			return array('type' => 'error', 'message' => $help);
-		}
-	}
-
-	public function checkReinstall(){
-        try {
-            DB::connection()->getPdo();
-            return (Storage::exists('.install_count') ? Storage::get('.install_count') : 0) and (\Artisan::call('spondonit:migrate-status'));
-        } catch (\Exception $e) {
-            return false;
-        }
-
+class InstallRepository
+{
+    /**
+     * Instantiate a new controller instance.
+     *
+     * @return void
+     */
+    public function __construct()
+    {
 
     }
 
+    public function checkInstallation()
+    {
+        $ac = Storage::exists('.app_installed') ? Storage::get('.app_installed') : null;
+        if ($ac) {
+            abort(404);
+        } else {
+            if ($this->checkPreviousInstallation()) {
+                return redirect('/')->send();
+            }
+        }
+    }
 
-	/**
-	 * Used to check whether pre requisites are fulfilled or not and returns array of success/error type with message
-	 */
-	public function checkPreviousInstallation() {
+    /**
+     * Used to compare version of PHP
+     */
+    public function my_version_compare($ver1, $ver2, $operator = null)
+    {
+        $p = '#(\.0+)+($|-)#';
+        $ver1 = preg_replace($p, '', $ver1);
+        $ver2 = preg_replace($p, '', $ver2);
+        return isset($operator) ?
+            version_compare($ver1, $ver2, $operator) :
+            version_compare($ver1, $ver2);
+    }
 
-		try {
-	        DB::connection()->getPdo();
+    /**
+     * Used to check whether pre requisites are fulfilled or not and returns array of success/error type with message
+     */
+    public function check($boolean, $message, $help = '', $fatal = false)
+    {
+        if ($boolean) {
+            return array('type' => 'success', 'message' => $message);
+        } else {
+            return array('type' => 'error', 'message' => $help);
+        }
+    }
 
-	        if(Schema::hasTable(config('spondonit.settings_table')) && Schema::hasTable('users')){
-		        $settings_model_name = config('spondonit.settings_model');
-		        $settings_model = new $settings_model_name;
-		        $config = $settings_model->find(1);
-		        $url = config('app.verifier') . '/api/cc?a=install&u=' . $_SERVER['HTTP_HOST'] . '&ac=' . $config->system_purchase_code . '&i=' . config('app.item') . '&e=' . $config->email;
+    public function checkReinstall()
+    {
+        try {
+            DB::connection()->getPdo();
+            return (Storage::exists('.install_count') ? Storage::get('.install_count') : 0) and (\Artisan::call('spondonit:migrate-status'));
+        } catch (Exception $e) {
+            return false;
+        }
+    }
 
-		        $response = curlIt($url);
-		        $status = (isset($response['status']) && $response['status']) ? 1 : 0;
 
-		        if ($status) {
-		            $checksum = isset($response['checksum']) ? $response['checksum'] : null;
-		            $license_code = isset($response['license_code']) ? $response['license_code'] : null;
-		            $response = true;
-		        } else {
-		           return false;
-		        }
+    /**
+     * Used to check whether pre requisites are fulfilled or not and returns array of success/error type with message
+     */
+    public function checkPreviousInstallation()
+    {
 
-		        Storage::put('.app_installed', isset($checksum) ? $checksum : '');
-		        Storage::put('.access_code', isset($license_code) ? $license_code : '' );
-		        Storage::put('.account_email', $config->email);
+        try {
+            DB::connection()->getPdo();
 
-		        return true;
-		    }
+            if (Schema::hasTable(config('spondonit.settings_table')) && Schema::hasTable('users')) {
+                $settings_model_name = config('spondonit.settings_model');
+                $settings_model = new $settings_model_name;
+                $config = $settings_model->find(1);
+                $url = config('app.verifier') . '/api/cc?a=install&u=' . $_SERVER['HTTP_HOST'] . '&ac=' . $config->system_purchase_code . '&i=' . config('app.item') . '&e=' . $config->email;
 
-	    } catch (\Exception $e) {
-	        return false;
-	    }
-	}
+                $response = curlIt($url);
+                $status = (isset($response['status']) && $response['status']) ? 1 : 0;
 
-	/**
-	 * Check all pre-requisite for script
-	 */
-	public function getPreRequisite() {
-		$server[] = $this->check((dirname($_SERVER['REQUEST_URI']) != '/' && str_replace('\\', '/', dirname($_SERVER['REQUEST_URI'])) != '/'), 'Installation directory is valid.', 'Please use root directory or point your sub directory to domain/subdomain to install.', true);
-		$server[] = $this->check($this->my_version_compare(phpversion(), '7.2.0', '>='), sprintf('Min PHP version 7.2.0 (%s)', 'Current Version ' . phpversion()), 'Current Version ' . phpversion(), true);
-		$server[] = $this->check(extension_loaded('fileinfo'), 'Fileinfo PHP extension enabled.', 'Install and enable Fileinfo extension.', true);
-		$server[] = $this->check(extension_loaded('ctype'), 'Ctype PHP extension enabled.', 'Install and enable Ctype extension.', true);
-		$server[] = $this->check(extension_loaded('json'), 'JSON PHP extension enabled.', 'Install and enable JSON extension.', true);
-		$server[] = $this->check(extension_loaded('openssl'), 'OpenSSL PHP extension enabled.', 'Install and enable OpenSSL extension.', true);
-		$server[] = $this->check(extension_loaded('tokenizer'), 'Tokenizer PHP extension enabled.', 'Install and enable Tokenizer extension.', true);
-		$server[] = $this->check(extension_loaded('mbstring'), 'Mbstring PHP extension enabled.', 'Install and enable Mbstring extension.', true);
-		$server[] = $this->check(extension_loaded('zip'), 'Zip archive PHP extension enabled.', 'Install and enable Zip archive extension.', true);
-		$server[] = $this->check(class_exists('PDO'), 'PDO is installed.', 'Install PDO (mandatory for Eloquent).', true);
-		$server[] = $this->check(extension_loaded('curl'), 'CURL is installed.', 'Install and enable CURL.', true);
-		$server[] = $this->check(ini_get('allow_url_fopen'), 'allow_url_fopen is on.', 'Turn on allow_url_fopen.', true);
+                if ($status) {
+                    $checksum = isset($response['checksum']) ? $response['checksum'] : null;
+                    $license_code = isset($response['license_code']) ? $response['license_code'] : null;
+                    $response = true;
+                } else {
+                    return false;
+                }
 
-		$folder[] = $this->check(is_writable(base_path('/.env')), 'File .env is writable', 'File .env is not writable', true);
-		$folder[] = $this->check(is_writable(base_path("/storage/framework")), 'Folder /storage/framework is writable', 'Folder /storage/framework is not writable', true);
-		$folder[] = $this->check(is_writable(base_path("/storage/logs")), 'Folder /storage/logs is writable', 'Folder /storage/logs is not writable', true);
-		$folder[] = $this->check(is_writable(base_path("/bootstrap/cache")), 'Folder /bootstrap/cache is writable', 'Folder /bootstrap/cache is not writable', true);
+                Storage::put('.app_installed', isset($checksum) ? $checksum : '');
+                Storage::put('.access_code', isset($license_code) ? $license_code : '');
+                Storage::put('.account_email', $config->email);
 
-		$verifier = config('app.verifier');
+                return true;
+            }
 
-		return ['server' => $server, 'folder' => $folder, 'verifier' => $verifier];
-	}
+        } catch (Exception $e) {
+            return false;
+        }
+    }
 
-	/**
-	 * Validate database connection, table count
-	 */
-	public function validateDatabase($params) {
-		$db_host = gv($params, 'db_host', env('DB_HOST'));
-		$db_username = gv($params, 'db_username', env('DB_USERNAME'));
-		$db_password = gv($params, 'db_password', env('DB_PASSWORD'));
-		$db_database = gv($params, 'db_database', env('DB_DATABASE'));
+    /**
+     * Check all pre-requisite for script
+     */
+    public function getPreRequisite()
+    {
+        $server[] = $this->check((dirname($_SERVER['REQUEST_URI']) != '/' && str_replace('\\', '/', dirname($_SERVER['REQUEST_URI'])) != '/'), 'Installation directory is valid.', 'Please use root directory or point your sub directory to domain/subdomain to install.', true);
+        $server[] = $this->check($this->my_version_compare(phpversion(), config('spondonit.php_version', '7.2.0'), '>='), sprintf('Min PHP version ' . config('spondonit.php_version', '7.2.0') . ' (%s)', 'Current Version ' . phpversion()), 'Current Version ' . phpversion(), true);
+        $server[] = $this->check(extension_loaded('fileinfo'), 'Fileinfo PHP extension enabled.', 'Install and enable Fileinfo extension.', true);
+        $server[] = $this->check(extension_loaded('ctype'), 'Ctype PHP extension enabled.', 'Install and enable Ctype extension.', true);
+        $server[] = $this->check(extension_loaded('json'), 'JSON PHP extension enabled.', 'Install and enable JSON extension.', true);
+        $server[] = $this->check(extension_loaded('openssl'), 'OpenSSL PHP extension enabled.', 'Install and enable OpenSSL extension.', true);
+        $server[] = $this->check(extension_loaded('tokenizer'), 'Tokenizer PHP extension enabled.', 'Install and enable Tokenizer extension.', true);
+        $server[] = $this->check(extension_loaded('mbstring'), 'Mbstring PHP extension enabled.', 'Install and enable Mbstring extension.', true);
+        $server[] = $this->check(extension_loaded('zip'), 'Zip archive PHP extension enabled.', 'Install and enable Zip archive extension.', true);
+        $server[] = $this->check(class_exists('PDO'), 'PDO is installed.', 'Install PDO (mandatory for Eloquent).', true);
+        $server[] = $this->check(extension_loaded('curl'), 'CURL is installed.', 'Install and enable CURL.', true);
+        $server[] = $this->check(ini_get('allow_url_fopen'), 'allow_url_fopen is on.', 'Turn on allow_url_fopen.', true);
+
+        $folder[] = $this->check(is_writable(base_path('/.env')), 'File .env is writable', 'File .env is not writable', true);
+        $folder[] = $this->check(is_writable(base_path("/storage/framework")), 'Folder /storage/framework is writable', 'Folder /storage/framework is not writable', true);
+        $folder[] = $this->check(is_writable(base_path("/storage/logs")), 'Folder /storage/logs is writable', 'Folder /storage/logs is not writable', true);
+        $folder[] = $this->check(is_writable(base_path("/bootstrap/cache")), 'Folder /bootstrap/cache is writable', 'Folder /bootstrap/cache is not writable', true);
+
+        $verifier = config('app.verifier');
+
+        return ['server' => $server, 'folder' => $folder, 'verifier' => $verifier];
+    }
+
+    /**
+     * Validate database connection, table count
+     */
+    public function validateDatabase($params)
+    {
+        $db_host = gv($params, 'db_host', env('DB_HOST'));
+        $db_username = gv($params, 'db_username', env('DB_USERNAME'));
+        $db_password = gv($params, 'db_password', env('DB_PASSWORD'));
+        $db_database = gv($params, 'db_database', env('DB_DATABASE'));
 
         $link = @mysqli_connect($db_host, $db_username, $db_password);
 
-		if (!$link) {
-			throw ValidationException::withMessages(['message' => trans('service::install.connection_not_established')]);
-		}
+        if (!$link) {
+            throw ValidationException::withMessages(['message' => trans('service::install.connection_not_established')]);
+        }
 
         $select_db = mysqli_select_db($link, $db_database);
         if (!$select_db) {
-			throw ValidationException::withMessages(['message' => trans('service::install.db_not_found')]);
+            throw ValidationException::withMessages(['message' => trans('service::install.db_not_found')]);
         }
 
-        if(!gbv($params, 'force_migrate')){
+        if (!gbv($params, 'force_migrate')) {
             $count_table_query = mysqli_query($link, "show tables");
             $count_table = mysqli_num_rows($count_table_query);
 
@@ -163,38 +172,38 @@ class InstallRepository {
 
         $this->setDBEnv($params);
 
-        if(gbv($params, 'force_migrate')){
-            \Artisan::call('db:wipe', ['--force' => true]);
+        if (gbv($params, 'force_migrate')) {
+            Artisan::call('db:wipe', ['--force' => true]);
         }
 
-		return true;
+        return true;
     }
 
-    public function checkDatabaseConnection(){
-        $db_host =  env('DB_HOST');
-		$db_username =  env('DB_USERNAME');
-		$db_password =  env('DB_PASSWORD');
-		$db_database = env('DB_DATABASE');
-
+    public function checkDatabaseConnection()
+    {
+        $db_host = env('DB_HOST');
+        $db_username = env('DB_USERNAME');
+        $db_password = env('DB_PASSWORD');
+        $db_database = env('DB_DATABASE');
 
 
         $link = @mysqli_connect($db_host, $db_username, $db_password);
 
         if (!$link) {
-			return false;
-		}
+            return false;
+        }
         $select_db = mysqli_select_db($link, $db_database);
 
         if (!$select_db) {
-			return false;
-		}
+            return false;
+        }
 
         $count_table_query = mysqli_query($link, "show tables");
-		$count_table = mysqli_num_rows($count_table_query);
+        $count_table = mysqli_num_rows($count_table_query);
 
-		if ($count_table) {
-			return false;
-		}
+        if ($count_table) {
+            return false;
+        }
 
 
         return true;
@@ -203,29 +212,29 @@ class InstallRepository {
     public function validateLicense($params)
     {
         if (isTestMode()) {
-			return;
-		}
-
-		if (!isConnected()) {
-			return;
+            return;
         }
 
-       $url = config('app.verifier') . '/api/cc?a=install&u=' . $_SERVER['HTTP_HOST'] . '&ac=' . request('access_code') . '&i=' . config('app.item') . '&e=' . request('envato_email');
+        if (!isConnected()) {
+            return;
+        }
+
+        $url = config('app.verifier') . '/api/cc?a=install&u=' . $_SERVER['HTTP_HOST'] . '&ac=' . request('access_code') . '&i=' . config('app.item') . '&e=' . request('envato_email');
 
         $response = curlIt($url);
 
-		$status = (isset($response['status']) && $response['status']) ? 1 : 0;
+        $status = (isset($response['status']) && $response['status']) ? 1 : 0;
 
-		if ($status) {
-			$checksum = isset($response['checksum']) ? $response['checksum'] : null;
-			$license_code = isset($response['license_code']) ? $response['license_code'] : null;
-		} else {
-			$message = gv($response, 'message') ? $response['message'] : trans('service::install.contact_script_author');
-			throw ValidationException::withMessages(['access_code' => $message]);
+        if ($status) {
+            $checksum = $response['checksum'] ?? null;
+            $license_code = $response['license_code'] ?? null;
+        } else {
+            $message = gv($response, 'message') ? $response['message'] : trans('service::install.contact_script_author');
+            throw ValidationException::withMessages(['access_code' => $message]);
         }
 
-        Storage::put('.temp_app_installed', isset($checksum) ? $checksum : '');
-		Storage::put('.access_code', isset($license_code) ? $license_code : '');
+        Storage::put('.temp_app_installed', $checksum ?? '');
+        Storage::put('.access_code', $license_code ?? '');
         Storage::put('.account_email', request('envato_email'));
         Storage::put('.access_log', date('Y-m-d'));
 
@@ -233,132 +242,127 @@ class InstallRepository {
 
     }
 
-    public function checkLicense() {
-		if (isTestMode()) {
-			return;
-		}
+    public function checkLicense()
+    {
+        if (isTestMode()) {
+            return;
+        }
 
-		if (!isConnected()) {
-			return;
-		}
+        if (!isConnected()) {
+            return;
+        }
 
-		$ac = Storage::exists('.access_code') ? Storage::get('.access_code') : null;
-		$e = Storage::exists('.account_email') ? Storage::get('.account_email') : null;
-		$c = Storage::exists('.temp_app_installed') ? Storage::get('.temp_app_installed') : null;
-		$v = Storage::exists('.version') ? Storage::get('.version') : null;
+        $ac = Storage::exists('.access_code') ? Storage::get('.access_code') : null;
+        $e = Storage::exists('.account_email') ? Storage::get('.account_email') : null;
+        $c = Storage::exists('.temp_app_installed') ? Storage::get('.temp_app_installed') : null;
+        $v = Storage::exists('.version') ? Storage::get('.version') : null;
 
 
-		$url = config('app.verifier') . '/api/cc?a=verify&u=' . $_SERVER['HTTP_HOST'] . '&ac=' . $ac . '&i=' . config('app.item') . '&e=' . $e . '&c=' . $c . '&v=' . $v;
-		$response = curlIt($url);
+        $url = config('app.verifier') . '/api/cc?a=verify&u=' . $_SERVER['HTTP_HOST'] . '&ac=' . $ac . '&i=' . config('app.item') . '&e=' . $e . '&c=' . $c . '&v=' . $v;
+        $response = curlIt($url);
 
-		$status = gbv($response, 'status');
+        $status = gbv($response, 'status');
 
-		if (!$status) {
-			\Log::info('License Verification failed');
-			Storage::delete(['.access_code', '.account_email']);
-			Storage::put('.temp_app_installed', '');
-			return false;
-		} else {
-			Storage::put('.access_log', date('Y-m-d'));
-			return true;
-		}
+        if (!$status) {
+            Log::info('License Verification failed');
+            Storage::delete(['.access_code', '.account_email']);
+            Storage::put('.temp_app_installed', '');
+            return false;
+        } else {
+            Storage::put('.access_log', date('Y-m-d'));
+            return true;
+        }
     }
 
 
+    /**
+     * Install the script
+     */
+    public function install($params)
+    {
 
-	/**
-	 * Install the script
-	 */
-	public function install($params) {
-
-		$this->migrateDB();
-
-		// File::cleanDirectory('storage/app/public');
-		// try{
-		// 	Artisan::call('storage:link');
-		// } catch (Exception $e){
-
-		// }
-
+        $this->migrateDB();
 
         $ac = Storage::exists('.temp_app_installed') ? Storage::get('.temp_app_installed') : null;
         Storage::put('.app_installed', $ac);
-		Storage::put('.user_email', gv($params, 'email'));
+        Storage::put('.user_email', gv($params, 'email'));
         Storage::put('.user_pass', gv($params, 'password'));
 
         Storage::delete('.temp_app_installed');
 
 
-	}
+    }
 
 
-	/**
-	 * Write to env file
-	 */
-	public function setDBEnv($params) {
-		envu([
-			'APP_URL' => app_url(),
-			'DB_PORT' => gv($params, 'db_port'),
-			'DB_HOST' => gv($params, 'db_host'),
-			'DB_DATABASE' => gv($params, 'db_database'),
-			'DB_USERNAME' => gv($params, 'db_username'),
-			'DB_PASSWORD' => gv($params, 'db_password'),
-		]);
+    /**
+     * Write to env file
+     */
+    public function setDBEnv($params)
+    {
+        envu([
+            'APP_URL' => app_url(),
+            'DB_PORT' => gv($params, 'db_port'),
+            'DB_HOST' => gv($params, 'db_host'),
+            'DB_DATABASE' => gv($params, 'db_database'),
+            'DB_USERNAME' => gv($params, 'db_username'),
+            'DB_PASSWORD' => gv($params, 'db_password'),
+        ]);
 
-		DB::disconnect('mysql');
+        DB::disconnect('mysql');
 
-		config([
-			'database.connections.mysql.host' => gv($params, 'db_host'),
-			'database.connections.mysql.port' => gv($params, 'db_port'),
-			'database.connections.mysql.database' => gv($params, 'db_database'),
-			'database.connections.mysql.username' => gv($params, 'db_username'),
-			'database.connections.mysql.password' => gv($params, 'db_password'),
-		]);
+        config([
+            'database.connections.mysql.host' => gv($params, 'db_host'),
+            'database.connections.mysql.port' => gv($params, 'db_port'),
+            'database.connections.mysql.database' => gv($params, 'db_database'),
+            'database.connections.mysql.username' => gv($params, 'db_username'),
+            'database.connections.mysql.password' => gv($params, 'db_password'),
+        ]);
 
-		DB::setDefaultConnection('mysql');
-	}
+        DB::setDefaultConnection('mysql');
+    }
 
-	/**
-	 * Mirage tables to database
-	 */
-	public function migrateDB() {
+    /**
+     * Mirage tables to database
+     */
+    public function migrateDB()
+    {
         try {
             Artisan::call('migrate:refresh', array('--force' => true));
         } catch (Throwable $e) {
             $this->rollbackDb();
-            $sql = base_path('database/'.config('spondonit.database_file'));
-            if(File::exists($sql)){
-            	DB::unprepared(file_get_contents($sql));
+            $sql = base_path('database/' . config('spondonit.database_file'));
+            if (File::exists($sql)) {
+                DB::unprepared(file_get_contents($sql));
             }
 
         }
-	}
+    }
 
-    public function rollbackDb(){
+    public function rollbackDb()
+    {
         Artisan::call('migrate:rollback', array('--force' => true));
     }
 
-	/**
-	 * Seed tables to database
-	 */
-	public function seed($seed = 0) {
-		if (!$seed) {
-			return;
-		}
+    /**
+     * Seed tables to database
+     */
+    public function seed($seed = 0)
+    {
+        if (!$seed) {
+            return;
+        }
 
-		$db = Artisan::call('db:seed', array('--force' => true));
-	}
+        $db = Artisan::call('db:seed', array('--force' => true));
+    }
 
 
-
-	public function installModule($params){
+    public function installModule($params)
+    {
 
         $code = gv($params, 'purchase_code');
         $name = gv($params, 'name');
         $e = gv($params, 'envatouser');
-       $row = gbv($params, 'row');
-        // $row = true;
-
+        $row = gbv($params, 'row');
 
         $dataPath = base_path('Modules/' . $name . '/' . $name . '.json');
 
@@ -367,25 +371,23 @@ class InstallRepository {
 
         $item_id = $array[$name]['item_id'];
 
-//        $e = Storage::exists('.account_email') ? Storage::get('.account_email') : null;
-
-        $url = config('app.verifier') . '/api/cc?a=install&u=' . $_SERVER['HTTP_HOST'] . '&ac=' . $code  . '&i=' .$item_id . '&e=' . $e.'&t=Module';
+        $url = config('app.verifier') . '/api/cc?a=install&u=' . $_SERVER['HTTP_HOST'] . '&ac=' . $code . '&i=' . $item_id . '&e=' . $e . '&t=Module';
 
         $response = curlIt($url);
 
 
-        $status = gbv($response, 'status', 0);
+        $status = gbv($response, 'status');
 
         if ($status) {
 
             // added a new column in sm general settings
-            if (!$row){
+            if (!$row) {
                 if (!Schema::hasColumn(config('spondonit.settings_table'), $name)) {
                     Schema::table(config('spondonit.settings_table'), function ($table) use ($name) {
                         $table->integer($name)->default(1)->nullable();
                     });
                 }
-            } else{
+            } else {
                 $settings_model_name = config('spondonit.settings_model');
                 $settings_model = new $settings_model_name;
                 $config = $settings_model->firstOrCreate(['key' => $name]);
@@ -401,7 +403,7 @@ class InstallRepository {
                 DB::beginTransaction();
                 $module_class_name = config('spondonit.module_manager_model');
                 $moduel_class = new $module_class_name;
-                $s =$moduel_class->where('name', $name)->first();
+                $s = $moduel_class->where('name', $name)->first();
                 if (empty($s)) {
                     $s = $moduel_class;
                 }
@@ -418,11 +420,11 @@ class InstallRepository {
 
                 $settings_model_name = config('spondonit.settings_model');
                 $settings_model = new $settings_model_name;
-                if ($row){
+                if ($row) {
                     $config = $settings_model->firstOrNew(['key' => $name]);
                     $config->value = 1;
                     $config->save();
-                } else{
+                } else {
                     $config = $settings_model->find(1);
                     $config->$name = 1;
                     $config->save();
@@ -433,30 +435,30 @@ class InstallRepository {
 
                 return true;
 
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 DB::rollback();
                 $this->disableModule($name, $row);
-               	throw ValidationException::withMessages(['message' => $e->getMessage()]);
+                throw ValidationException::withMessages(['message' => $e->getMessage()]);
             }
         } else {
             $this->disableModule($name, $row);
-           	throw ValidationException::withMessages(['message' => gv($response, 'message', 'Something is not right')]);
+            throw ValidationException::withMessages(['message' => gv($response, 'message', 'Something is not right')]);
         }
     }
 
-    protected function disableModule($module_name, $row = false){
-    	$settings_model_name = config('spondonit.settings_model');
-    	$settings_model = new $settings_model_name;
-    	if ($row){
+    protected function disableModule($module_name, $row = false)
+    {
+        $settings_model_name = config('spondonit.settings_model');
+        $settings_model = new $settings_model_name;
+        if ($row) {
             $config = $settings_model->firstOrNew(['key' => $module_name]);
             $config->value = 0;
             $config->save();
-        } else{
+        } else {
             $config = $settings_model->find(1);
             $config->$module_name = 0;
             $config->save();
         }
-
         $module_model_name = config('spondonit.module_model');
         $module_model = new $module_model_name;
         $ModuleManage = $module_model::find($module_name)->disable();

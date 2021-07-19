@@ -1,4 +1,5 @@
 function ajax_error(data) {
+    "use strict";
     if (data.status === 404) {
         toastr.error("What you are looking is not found", 'Opps!');
         return;
@@ -22,7 +23,6 @@ function ajax_error(data) {
                     updateClass: true
                 });
             }
-            // $('#' + first_item).after('<div class="ajax_error" style="color:red">' + value + '</div');
             toastr.error(value, 'Validation Error');
             i++;
         });
@@ -32,6 +32,7 @@ function ajax_error(data) {
 }
 
 function jsUcfirst(string) {
+    "use strict";
     return string.charAt(0).toUpperCase() + string.slice(1);
 }
 
@@ -72,9 +73,6 @@ function _formValidation(form_id = 'content_form', modal = false, modal_id = 'co
                 form.find('input:text').val('');
                 form.find("input:text:visible:first").focus();
                 toastr.success(data.message, 'Succes');
-                // if (modal) {
-                //     $("." + modal_id).modal('hide');
-                // }
                 if (ajax_table) {
                     ajax_table.ajax.reload();
                 }

@@ -1,4 +1,62 @@
-@import url("http://fonts.googleapis.com/css?family=Poppins:300,400,400i,500,600");
+@font-face {
+    font-family: 'Poppins';
+    src: url('../fonts/poppins/Poppins-Medium.eot');
+    src: url('../fonts/poppins/Poppins-Medium.eot?#iefix') format('embedded-opentype'),
+    url('../fonts/poppins/Poppins-Medium.woff2') format('woff2'),
+    url('../fonts/poppins/Poppins-Medium.woff') format('woff'),
+    url('../fonts/poppins/Poppins-Medium.ttf') format('truetype');
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Poppins';
+    src: url('../fonts/poppins/Poppins-Italic.eot');
+    src: url('../fonts/poppins/Poppins-Italic.eot?#iefix') format('embedded-opentype'),
+    url('../fonts/poppins/Poppins-Italic.woff2') format('woff2'),
+    url('../fonts/poppins/Poppins-Italic.woff') format('woff'),
+    url('../fonts/poppins/Poppins-Italic.ttf') format('truetype');
+    font-weight: normal;
+    font-style: italic;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Poppins';
+    src: url('../fonts/poppins/Poppins-Light.eot');
+    src: url('../fonts/poppins/Poppins-Light.eot?#iefix') format('embedded-opentype'),
+    url('../fonts/poppins/Poppins-Light.woff2') format('woff2'),
+    url('../fonts/poppins/Poppins-Light.woff') format('woff'),
+    url('../fonts/poppins/Poppins-Light.ttf') format('truetype');
+    font-weight: 300;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Poppins';
+    src: url('../fonts/poppins/Poppins-Regular.eot');
+    src: url('../fonts/poppins/Poppins-Regular.eot?#iefix') format('embedded-opentype'),
+    url('../fonts/poppins/Poppins-Regular.woff2') format('woff2'),
+    url('../fonts/poppins/Poppins-Regular.woff') format('woff'),
+    url('../fonts/poppins/Poppins-Regular.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Poppins';
+    src: url('../fonts/poppins/Poppins-SemiBold.eot');
+    src: url('../fonts/poppins/Poppins-SemiBold.eot?#iefix') format('embedded-opentype'),
+    url('../fonts/poppins/Poppins-SemiBold.woff2') format('woff2'),
+    url('../fonts/poppins/Poppins-SemiBold.woff') format('woff'),
+    url('../fonts/poppins/Poppins-SemiBold.ttf') format('truetype');
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+}
 
 #progressbar {
     margin-bottom: 30px;
@@ -451,5 +509,33 @@ h1, h2, h3, h4, h5, h6 {
     border: 1px solid #828BB2;
     transition: .3s;
     transform: scale(1);
+}
+.color-whitesmoke{
+    color: whitesmoke;
+}
+.bc-color{
+    background-color: rebeccapurple;
+    color: whitesmoke
+}
+
+.bc-color-d-none{
+    background-color: rebeccapurple;
+    color: whitesmoke;
+    display: none;
+}
+
+.text-center-vendor{
+    text-align: center;
+}
+.alert-font{
+    font-size: 13px;
+    padding:5px;
+}
+.d-none{
+    display: none;
+}
+.width-shadow{
+    width:100%;
+    box-shadow: none;
 }
 

@@ -22,7 +22,6 @@ class UpdateController extends Controller
         $this->request = $request;
         $this->repo = $repo;
         $this->init = $init;
-        // $this->middleware('prohibited.test.mode')->only(['download','update']);
     }
 
     public function index()
