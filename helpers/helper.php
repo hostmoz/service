@@ -62,6 +62,7 @@ if (!function_exists('curlIt')) {
 
     function curlIt($url, $postData = array())
     {
+        $url  = preg_replace("/\r|\n/", "", $url);
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
@@ -116,20 +117,11 @@ if (!function_exists('nav_item_open')) {
     }
 }
 
-if (!function_exists('check_https')) {
-    function check_https()
-    {
-        if ((!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || $_SERVER['SERVER_PORT'] == 443) {
-            return 'https';
-        }
-        return 'http';
-    }
-}
 
 if (!function_exists('app_url')) {
     function app_url()
     {
-        return check_https() . '://' . $_SERVER['HTTP_HOST'];
+        return url('/');
     }
 }
 

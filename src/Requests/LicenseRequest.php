@@ -23,14 +23,10 @@ class LicenseRequest extends FormRequest
      */
     public function rules()
     {
-        $rules = [
+        return [
             'access_code' => 'required',
             'envato_email' => 'required|email'
         ];
-
-
-
-        return $rules;
     }
 
     /**

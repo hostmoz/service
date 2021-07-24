@@ -24,19 +24,12 @@ class DatabaseRequest extends FormRequest
     public function rules()
     {
         $option = $this->route('option');
-
-        $rules = array();
-
-        $rules = [
+        return [
             'db_port'     => 'required',
             'db_host'     => 'required',
             'db_database' => 'required',
             'db_username' => 'required'
         ];
-
-
-
-        return $rules;
     }
 
     /**

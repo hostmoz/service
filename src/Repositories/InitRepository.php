@@ -4,6 +4,7 @@ namespace SpondonIt\Service\Repositories;
 
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
@@ -12,7 +13,7 @@ use Illuminate\Validation\ValidationException;
 class InitRepository {
 
     public function init() {
-        config(['app.verifier' => 'http://auth.uxseven.com']);
+        config(['app.verifier' => 'http://auth.spondonit.test']);
     }
 
     public function checkDatabase(){
@@ -27,11 +28,11 @@ class InitRepository {
         } catch(\Exception $e){
             $error = $e->getCode();
             if($error == 2002){
-                return abort(403, 'No connection could be made because the target machine actively refused it');
+                 abort(403, 'No connection could be made because the target machine actively refused it');
             } else if($error == 1045){
                 $c = Storage::exists('.app_installed') ? Storage::get('.app_installed') : false;{
                     if($c){
-                        return abort(403, 'Access denied for user. Please check your database username and password.');
+                         abort(403, 'Access denied for user. Please check your database username and password.');
                     }
                 }
             }
@@ -59,7 +60,7 @@ class InitRepository {
         $c = Storage::exists('.app_installed') ? Storage::get('.app_installed') : null;
         $v = Storage::exists('.version') ? Storage::get('.version') : null;
 
-        $url = config('app.verifier') . '/api/cc?a=verify&u=' . $_SERVER['HTTP_HOST'] . '&ac=' . $ac . '&i=' . config('app.item') . '&e=' . $e . '&c=' . $c . '&v=' . $v;
+        $url = config('app.verifier') . '/api/cc?a=verify&u=' . url('/') . '&ac=' . $ac . '&i=' . config('app.item') . '&e=' . $e . '&c=' . $c . '&v=' . $v;
         $response = curlIt($url);
 
         if($response){
@@ -92,7 +93,7 @@ class InitRepository {
         $update_tips = file_get_contents(config('app.verifier') . '/update-tips');
         $support_tips = file_get_contents(config('app.verifier') . '/support-tips');
 
-        $url = config('app.verifier') . '/api/cc?a=product&u=' .  $_SERVER['HTTP_HOST'] . '&ac=' . $ac . '&i=' . config('app.item') . '&e=' . $e . '&c=' . $c . '&v=' . $v;
+        $url = config('app.verifier') . '/api/cc?a=product&u=' .  url('/') . '&ac=' . $ac . '&i=' . config('app.item') . '&e=' . $e . '&c=' . $c . '&v=' . $v;
 
 
         $response = curlIt($url);

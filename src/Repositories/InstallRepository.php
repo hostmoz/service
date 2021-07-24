@@ -68,6 +68,7 @@ class InstallRepository
             DB::connection()->getPdo();
             return (Storage::exists('.install_count') ? Storage::get('.install_count') : 0) and (\Artisan::call('spondonit:migrate-status'));
         } catch (Exception $e) {
+            Log::error($e);
             return false;
         }
     }
@@ -86,7 +87,7 @@ class InstallRepository
                 $settings_model_name = config('spondonit.settings_model');
                 $settings_model = new $settings_model_name;
                 $config = $settings_model->find(1);
-                $url = config('app.verifier') . '/api/cc?a=install&u=' . $_SERVER['HTTP_HOST'] . '&ac=' . $config->system_purchase_code . '&i=' . config('app.item') . '&e=' . $config->email;
+                $url = config('app.verifier') . '/api/cc?a=install&u=' . url('/') . '&ac=' . $config->system_purchase_code . '&i=' . config('app.item') . '&e=' . $config->email;
 
                 $response = curlIt($url);
                 $status = (isset($response['status']) && $response['status']) ? 1 : 0;
@@ -107,6 +108,7 @@ class InstallRepository
             }
 
         } catch (Exception $e) {
+            Log::error($e);
             return false;
         }
     }
@@ -219,7 +221,7 @@ class InstallRepository
             return;
         }
 
-        $url = config('app.verifier') . '/api/cc?a=install&u=' . $_SERVER['HTTP_HOST'] . '&ac=' . request('access_code') . '&i=' . config('app.item') . '&e=' . request('envato_email');
+        $url = config('app.verifier') . '/api/cc?a=install&u=' . url('/') . '&ac=' . request('access_code') . '&i=' . config('app.item') . '&e=' . request('envato_email');
 
         $response = curlIt($url);
 
@@ -258,9 +260,8 @@ class InstallRepository
         $v = Storage::exists('.version') ? Storage::get('.version') : null;
 
 
-        $url = config('app.verifier') . '/api/cc?a=verify&u=' . $_SERVER['HTTP_HOST'] . '&ac=' . $ac . '&i=' . config('app.item') . '&e=' . $e . '&c=' . $c . '&v=' . $v;
+        $url = config('app.verifier') . '/api/cc?a=verify&u=' . url('/') . '&ac=' . $ac . '&i=' . config('app.item') . '&e=' . $e . '&c=' . $c . '&v=' . $v;
         $response = curlIt($url);
-
         $status = gbv($response, 'status');
 
         if (!$status) {
@@ -330,6 +331,7 @@ class InstallRepository
             Artisan::call('migrate:refresh', array('--force' => true));
         } catch (Throwable $e) {
             $this->rollbackDb();
+            Log::error($e);
             $sql = base_path('database/' . config('spondonit.database_file'));
             if (File::exists($sql)) {
                 DB::unprepared(file_get_contents($sql));
@@ -371,7 +373,7 @@ class InstallRepository
 
         $item_id = $array[$name]['item_id'];
 
-        $url = config('app.verifier') . '/api/cc?a=install&u=' . $_SERVER['HTTP_HOST'] . '&ac=' . $code . '&i=' . $item_id . '&e=' . $e . '&t=Module';
+        $url = config('app.verifier') . '/api/cc?a=install&u=' . url('/') . '&ac=' . $code . '&i=' . $item_id . '&e=' . $e . '&t=Module';
 
         $response = curlIt($url);
 
@@ -437,6 +439,7 @@ class InstallRepository
 
             } catch (Exception $e) {
                 DB::rollback();
+                Log::error($e);
                 $this->disableModule($name, $row);
                 throw ValidationException::withMessages(['message' => $e->getMessage()]);
             }

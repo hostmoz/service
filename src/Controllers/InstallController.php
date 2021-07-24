@@ -36,7 +36,6 @@ class InstallController extends Controller{
 
 		envu(['APP_ENV' => 'production']);
 		$name = env('APP_NAME');
-
 		return view('service::install.preRequisite', compact('server_checks', 'folder_checks', 'name', 'verifier', 'has_false'));
     }
 

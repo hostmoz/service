@@ -19,7 +19,7 @@ class LicenseController extends Controller{
 
 
     public function revoke(){
-  
+
         $ac = Storage::exists('.app_installed') ? Storage::get('.app_installed') : null;
         if(!$ac){
             return redirect()->route('service.install');
@@ -30,6 +30,6 @@ class LicenseController extends Controller{
         $this->repo->revoke();
 
         return redirect()->route('service.install');
-		
+
     }
 }

@@ -24,17 +24,12 @@ class ModuleInstallRequest extends FormRequest
     public function rules()
     {
 
-        $rules = array();
-
-        $rules = [
+        return [
             'purchase_code'     => 'required',
             'name'              => 'required',
             'envatouser'        => 'required|email',
 
         ];
-
-
-        return $rules;
     }
 
     /**
