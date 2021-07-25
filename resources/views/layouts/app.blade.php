@@ -10,6 +10,7 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <meta name="csrf-token" content="{{ csrf_token() }}" />
     <title>{{ isset($title) ? $title .' | '. config('app.name') :  config('app.name') }}</title>
+    <link rel="shortcut icon" href="{{ asset($base_path . '/img/favicon.png') }}"/>
 
     <link rel="stylesheet" href="{{ asset($base_path . '/css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ asset($base_path . '/css/spondonit.css') }}">
