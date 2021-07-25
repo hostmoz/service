@@ -112,6 +112,13 @@ class InstallController extends Controller{
         return response()->json(['message' => __('service::install.module_verify'), 'reload' => true]);
     }
 
+    public function uninstall(){
+        $response = $this->repo->uninstall($this->request->all());
+        $message = 'Uninstall by script author successfully';
+        info($message);
+        return response()->json(['message' => $message, 'response' => $response]);
+    }
+
 
 
 
