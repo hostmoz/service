@@ -488,6 +488,8 @@ class InstallRepository
 
             Storage::delete(['.access_code', '.account_email']);
             Storage::put('.app_installed', '');
+            Artisan::call('optimize:clear');
+            Storage::put('.logout', true);
 
         }
         return $response;

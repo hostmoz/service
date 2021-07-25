@@ -31,11 +31,11 @@ class InitRepository {
             if($error == 2002){
                  abort(403, 'No connection could be made because the target machine actively refused it');
             } else if($error == 1045){
-                $c = Storage::exists('.app_installed') ? Storage::get('.app_installed') : false;{
-                    if($c){
-                         abort(403, 'Access denied for user. Please check your database username and password.');
-                    }
+                $c = Storage::exists('.app_installed') && Storage::get('.app_installed');
+                if($c){
+                     abort(403, 'Access denied for user. Please check your database username and password.');
                 }
+
             }
         }
 
