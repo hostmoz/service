@@ -366,6 +366,7 @@ class InstallRepository
         $name = gv($params, 'name');
         $e = gv($params, 'envatouser');
         $row = gbv($params, 'row');
+        $file = gbv($params, 'file');
 
         $dataPath = base_path('Modules/' . $name . '/' . $name . '.json');
 
@@ -385,15 +386,17 @@ class InstallRepository
 
             // added a new column in sm general settings
             if (!$row) {
-                if (!Schema::hasColumn(config('spondonit.settings_table'), $name)) {
-                    Schema::table(config('spondonit.settings_table'), function ($table) use ($name) {
-                        $table->integer($name)->default(1)->nullable();
-                    });
-                }
-            } else if(gbv($params, 'file')){
-                     app('general_settings')->put([
+                if (gbv($params, 'file')) {
+                    app('general_settings')->put([
                        'payroll' => 0
                     ]);
+                } else{
+                    if (!Schema::hasColumn(config('spondonit.settings_table'), $name)) {
+                        Schema::table(config('spondonit.settings_table'), function ($table) use ($name) {
+                            $table->integer($name)->default(1)->nullable();
+                        });
+                    }
+                }
             } else {
                 $settings_model_name = config('spondonit.settings_model');
                 $settings_model = new $settings_model_name;
@@ -426,12 +429,12 @@ class InstallRepository
                 $r = $s->save();
 
                 $settings_model_name = config('spondonit.settings_model');
-                $settings_model = new $settings_model_name;
+                    $settings_model = new $settings_model_name;
                 if ($row) {
                     $config = $settings_model->firstOrNew(['key' => $name]);
                     $config->value = 1;
                     $config->save();
-                }  else if(gbv($params, 'file')){
+                }  else if($file){
                      app('general_settings')->put([
                        'payroll' => 1
                     ]);
@@ -449,7 +452,7 @@ class InstallRepository
             } catch (Exception $e) {
                 DB::rollback();
                 Log::error($e);
-                $this->disableModule($name, $row);
+                $this->disableModule($name, $row, $file);
                 throw ValidationException::withMessages(['message' => $e->getMessage()]);
             }
         } else {
@@ -458,15 +461,16 @@ class InstallRepository
         }
     }
 
-    protected function disableModule($module_name, $row = false)
+    protected function disableModule($module_name, $row = false, $file = false)
     {
+        
         $settings_model_name = config('spondonit.settings_model');
         $settings_model = new $settings_model_name;
         if ($row) {
             $config = $settings_model->firstOrNew(['key' => $module_name]);
             $config->value = 0;
             $config->save();
-        } else if(gbv($params, 'file')){
+        } else if($file){
             app('general_settings')->put([
                'payroll' => 0
             ]);
