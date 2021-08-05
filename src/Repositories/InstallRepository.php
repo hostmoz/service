@@ -390,6 +390,10 @@ class InstallRepository
                         $table->integer($name)->default(1)->nullable();
                     });
                 }
+            } else if(gbv($params, 'file')){
+                     app('general_settings')->put([
+                       'payroll' => 0
+                    ]);
             } else {
                 $settings_model_name = config('spondonit.settings_model');
                 $settings_model = new $settings_model_name;
@@ -427,6 +431,10 @@ class InstallRepository
                     $config = $settings_model->firstOrNew(['key' => $name]);
                     $config->value = 1;
                     $config->save();
+                }  else if(gbv($params, 'file')){
+                     app('general_settings')->put([
+                       'payroll' => 1
+                    ]);
                 } else {
                     $config = $settings_model->find(1);
                     $config->$name = 1;
@@ -458,6 +466,10 @@ class InstallRepository
             $config = $settings_model->firstOrNew(['key' => $module_name]);
             $config->value = 0;
             $config->save();
+        } else if(gbv($params, 'file')){
+            app('general_settings')->put([
+               'payroll' => 0
+            ]);
         } else {
             $config = $settings_model->find(1);
             $config->$module_name = 0;
