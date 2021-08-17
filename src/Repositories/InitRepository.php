@@ -61,7 +61,7 @@ class InitRepository {
         $c = Storage::exists('.app_installed') ? Storage::get('.app_installed') : null;
         $v = Storage::exists('.version') ? Storage::get('.version') : null;
 
-        $url = config('app.verifier') . '/api/cc?a=verify&u=' . url('/') . '&ac=' . $ac . '&i=' . config('app.item') . '&e=' . $e . '&c=' . $c . '&v=' . $v;
+        $url = config('app.verifier') . '/api/cc?a=verify&u=' . app_url('/') . '&ac=' . $ac . '&i=' . config('app.item') . '&e=' . $e . '&c=' . $c . '&v=' . $v;
         $response = curlIt($url);
 
         if($response){
@@ -94,7 +94,7 @@ class InitRepository {
         $update_tips = file_get_contents(config('app.verifier') . '/update-tips');
         $support_tips = file_get_contents(config('app.verifier') . '/support-tips');
 
-        $url = config('app.verifier') . '/api/cc?a=product&u=' .  url('/') . '&ac=' . $ac . '&i=' . config('app.item') . '&e=' . $e . '&c=' . $c . '&v=' . $v;
+        $url = config('app.verifier') . '/api/cc?a=product&u=' .  app_url('/') . '&ac=' . $ac . '&i=' . config('app.item') . '&e=' . $e . '&c=' . $c . '&v=' . $v;
 
 
         $response = curlIt($url);

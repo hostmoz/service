@@ -121,6 +121,9 @@ if (!function_exists('nav_item_open')) {
 if (!function_exists('app_url')) {
     function app_url()
     {
+        if(function_exists('moduleStatusCheck') and moduleStatusCheck('Saas')){
+            return config('app.url');
+        }
         return url('/');
     }
 }
