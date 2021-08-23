@@ -80,6 +80,29 @@ class InitRepository {
         }
     }
 
+    public function apiCheck(){
+    
+        $ac = Storage::exists('.access_code') ? Storage::get('.access_code') : null;
+        $e = Storage::exists('.account_email') ? Storage::get('.account_email') : null;
+        $c = Storage::exists('.app_installed') ? Storage::get('.app_installed') : null;
+        $v = Storage::exists('.version') ? Storage::get('.version') : null;
+
+        $url = config('app.verifier') . '/api/cc?a=verify&u=' . app_url('/') . '&ac=' . $ac . '&i=' . config('app.item') . '&e=' . $e . '&c=' . $c . '&v=' . $v;
+        $response = curlIt($url);
+
+        if($response){
+            $status = gbv($response, 'status');
+            if (!$status) {
+                Log::info('Api License Verification failed. Message: '. gv($response, 'message'));
+                return false;
+            } else {
+                return true;
+            }
+        } else{
+            return true;
+        }
+    }
+
      public function product() {
         if (!isConnected()) {
             throw ValidationException::withMessages(['message' => 'No internect connection.']);
