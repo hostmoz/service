@@ -86,7 +86,6 @@ class InstallController extends Controller{
 
     public function post_database(DatabaseRequest $request){
         $this->repo->validateDatabase($request->all());
-        session()->flash('database', 'connected');
 		return response()->json(['message' => __('service::install.connection_established'), 'goto' => route('service.user')]);
     }
 
