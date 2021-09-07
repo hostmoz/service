@@ -17,8 +17,9 @@ Route::group(['namespace' => 'SpondonIt\Service\Controllers', 'middleware' => 'w
     Route::get('/update', 'UpdateController@index')->name('service.update');
     Route::post('/update', 'UpdateController@update');
     Route::post('/download', 'UpdateController@download')->name('service.delete');
-    Route::post('/revoke', 'LicenseController@revoke')->name('service.revoke');
     Route::post('/install-adons', 'InstallController@ManageAddOnsValidation')->name('ManageAddOnsValidation');
+    Route::post('/revoke', 'LicenseController@revoke')->name('service.revoke');
+    Route::post('/revoke-adons', 'LicenseController@revokeModule')->name('service.revoke.module');
 
 });
 

@@ -13,7 +13,7 @@ use Illuminate\Validation\ValidationException;
 class InitRepository {
 
     public function init() {
-        config(['app.verifier' => 'http://auth.uxseven.com']);
+        config(['app.verifier' => 'http://auth.spondonit.test']);
         config(['app.signature' => 'eyJpdiI6Im9oMWU5Z0NoSGVwVzdmQlphaVBvd1E9PSIsInZhbHVlIjoiUURhZmpubkNBUVB6b0ZPck1v']);
     }
 
@@ -61,7 +61,7 @@ class InitRepository {
         $c = Storage::exists('.app_installed') ? Storage::get('.app_installed') : null;
         $v = Storage::exists('.version') ? Storage::get('.version') : null;
 
-        $url = config('app.verifier') . '/api/cc?a=verify&u=' . app_url('/') . '&ac=' . $ac . '&i=' . config('app.item') . '&e=' . $e . '&c=' . $c . '&v=' . $v;
+        $url = config('app.verifier') . '/api/cc?a=verify&u=' . app_url() . '&ac=' . $ac . '&i=' . config('app.item') . '&e=' . $e . '&c=' . $c . '&v=' . $v;
         $response = curlIt($url);
 
         if($response){
@@ -87,7 +87,7 @@ class InitRepository {
         $c = Storage::exists('.app_installed') ? Storage::get('.app_installed') : null;
         $v = Storage::exists('.version') ? Storage::get('.version') : null;
 
-        $url = config('app.verifier') . '/api/cc?a=verify&u=' . app_url('/') . '&ac=' . $ac . '&i=' . config('app.item') . '&e=' . $e . '&c=' . $c . '&v=' . $v;
+        $url = config('app.verifier') . '/api/cc?a=verify&u=' . app_url() . '&ac=' . $ac . '&i=' . config('app.item') . '&e=' . $e . '&c=' . $c . '&v=' . $v;
         $response = curlIt($url);
 
         if($response){
@@ -117,7 +117,7 @@ class InitRepository {
         $update_tips = file_get_contents(config('app.verifier') . '/update-tips');
         $support_tips = file_get_contents(config('app.verifier') . '/support-tips');
 
-        $url = config('app.verifier') . '/api/cc?a=product&u=' .  app_url('/') . '&ac=' . $ac . '&i=' . config('app.item') . '&e=' . $e . '&c=' . $c . '&v=' . $v;
+        $url = config('app.verifier') . '/api/cc?a=product&u=' .  app_url() . '&ac=' . $ac . '&i=' . config('app.item') . '&e=' . $e . '&c=' . $c . '&v=' . $v;
 
 
         $response = curlIt($url);

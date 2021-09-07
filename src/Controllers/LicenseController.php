@@ -12,7 +12,7 @@ class LicenseController extends Controller{
 
     public function __construct(LicenseRepository $repo, Request $request)
     {
-        $this->middleware('auth');
+        // $this->middleware('auth');
         $this->repo = $repo;
         $this->request = $request;
     }
@@ -28,6 +28,21 @@ class LicenseController extends Controller{
         abort_if(auth()->user()->role_id != 1, 403);
 
         $this->repo->revoke();
+
+        return redirect()->route('service.install');
+
+    }
+
+    public function revokeModule(Request $request){
+
+        $ac = Storage::exists('.app_installed') ? Storage::get('.app_installed') : null;
+        if(!$ac){
+            return redirect()->route('service.install');
+        }
+
+        abort_if(auth()->user()->role_id != 1, 403);
+
+        $this->repo->revoke($request->all());
 
         return redirect()->route('service.install');
 

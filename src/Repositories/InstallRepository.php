@@ -375,7 +375,7 @@ class InstallRepository
 
         $item_id = $array[$name]['item_id'];
 
-        $url = config('app.verifier') . '/api/cc?a=install&u=' . url('/') . '&ac=' . $code . '&i=' . $item_id . '&e=' . $e . '&t=Module';
+        $url = config('app.verifier') . '/api/cc?a=install&u=' . app_url() . '&ac=' . $code . '&i=' . $item_id . '&e=' . $e . '&t=Module';
 
         $response = curlIt($url);
 
@@ -429,7 +429,7 @@ class InstallRepository
                 $r = $s->save();
 
                 $settings_model_name = config('spondonit.settings_model');
-                    $settings_model = new $settings_model_name;
+                $settings_model = new $settings_model_name;
                 if ($row) {
                     $config = $settings_model->firstOrNew(['key' => $name]);
                     $config->value = 1;
@@ -472,7 +472,7 @@ class InstallRepository
             $config->save();
         } else if($file){
             app('general_settings')->put([
-               'payroll' => 0
+               $module_name => 0
             ]);
         } else {
             $config = $settings_model->find(1);
