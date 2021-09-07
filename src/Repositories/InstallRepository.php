@@ -96,17 +96,18 @@ class InstallRepository
                 if ($status) {
                     $checksum = $response['checksum'] ?? null;
                     $license_code = $response['license_code'] ?? null;
-                    $response = true;
-                } else {
-                    return false;
-                }
-
-                Storage::put('.app_installed', $checksum ?? '');
-                Storage::put('.access_code', $license_code ?? '');
-                Storage::put('.account_email', $config->email);
-
-                return true;
+                    Storage::put('.app_installed', $checksum ?? '');
+                    Storage::put('.access_code', $license_code ?? '');
+                    Storage::put('.account_email', $config->email);
+                    return true;
+                } 
+                
+                return false;
+              
+               
             }
+
+            return false;
 
         } catch (Exception $e) {
             Log::error($e);

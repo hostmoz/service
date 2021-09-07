@@ -6,13 +6,14 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use SpondonIt\Service\Repositories\LicenseRepository;
+use Toastr;
 
 class LicenseController extends Controller{
     protected $repo, $request;
 
     public function __construct(LicenseRepository $repo, Request $request)
     {
-        // $this->middleware('auth');
+         $this->middleware('auth');
         $this->repo = $repo;
         $this->request = $request;
     }
@@ -42,9 +43,10 @@ class LicenseController extends Controller{
 
         abort_if(auth()->user()->role_id != 1, 403);
 
-        $this->repo->revoke($request->all());
+        $this->repo->revokeModule($request->all());
+        Toastr::success('Your module license revoke successfull');
 
-        return redirect()->route('service.install');
+        return redirect()->back();
 
     }
 }

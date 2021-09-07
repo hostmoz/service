@@ -8,17 +8,20 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Throwable;
 
-class LicenseRepository {
-	/**
-	 * Instantiate a new controller instance.
-	 *
-	 * @return void
-	 */
-	public function __construct() {
+class LicenseRepository
+{
+    /**
+     * Instantiate a new controller instance.
+     *
+     * @return void
+     */
+    public function __construct()
+    {
 
-	}
+    }
 
-	public function revoke() {
+    public function revoke()
+    {
 
         $ac = Storage::exists('.access_code') ? Storage::get('.access_code') : null;
         $e = Storage::exists('.account_email') ? Storage::get('.account_email') : null;
@@ -31,9 +34,9 @@ class LicenseRepository {
 
         Auth::logout();
 
-		Artisan::call('db:wipe', ['--force' => true]);
+        Artisan::call('db:wipe', ['--force' => true]);
 
-		envu([
+        envu([
             'DB_PORT' => '3306',
             'DB_HOST' => 'localhost',
             'DB_DATABASE' => "",
@@ -46,47 +49,48 @@ class LicenseRepository {
     }
 
 
-public function revokeModule($params){
+    public function revokeModule($params)
+    {
 
-    $name = gv($params, 'name');
+        $name = gv($params, 'name');
+        $e = Storage::exists('.account_email') ? Storage::get('.account_email') : null;
+        $module_class_name = config('spondonit.module_manager_model');
+        $moduel_class = new $module_class_name;
+        $s = $moduel_class->where('name', $name)->first();
 
-    $module_class_name = config('spondonit.module_manager_model');
-    $moduel_class = new $module_class_name;
-    $s = $moduel_class->where('name', $name)->first();
+        if ($s) {
+            $row = gbv($params, 'row');
+            $file = gbv($params, 'file');
 
-    if ($s) {
-        $row = gbv($params, 'row');
-        $file = gbv($params, 'file');
+            $dataPath = base_path('Modules/' . $name . '/' . $name . '.json');
 
-        $dataPath = base_path('Modules/' . $name . '/' . $name . '.json');
+            $strJsonFileContents = file_get_contents($dataPath);
+            $array = json_decode($strJsonFileContents, true);
 
-        $strJsonFileContents = file_get_contents($dataPath);
-        $array = json_decode($strJsonFileContents, true);
+            $item_id = $array[$name]['item_id'];
+            $version = $array[$name]['versions'][0];
 
-        $item_id = $array[$name]['item_id'];
-        $version = $array[$name]['versions'][0];
+            $url = config('app.verifier') . '/api/cc?a=remove&u=' . app_url() . '&ac=' . $s->purchase_code . '&i=' . $item_id . '&t=Module' . '&v=' . $version . '&e=' . $e;
 
-         $url = config('app.verifier') . '/api/cc?a=remove&u=' . app_url() . '&ac=' . $s->purchase_code . '&i=' . $item_id . '&t=Module'.'&c='.$s->checksum.'&v='.$version;
+            $response = curlIt($url);
+            $s->delete();
+            $this->disableModule($name, $row, $file);
+        }
 
-        $response = curlIt($url);
-
-        $this->disableModule($name, $row, $file);
     }
 
-}
-
-protected function disableModule($module_name, $row = false, $file = false)
+    protected function disableModule($module_name, $row = false, $file = false)
     {
-        
+
         $settings_model_name = config('spondonit.settings_model');
         $settings_model = new $settings_model_name;
         if ($row) {
             $config = $settings_model->firstOrNew(['key' => $module_name]);
             $config->value = 0;
             $config->save();
-        } else if($file){
+        } else if ($file) {
             app('general_settings')->put([
-               $module_name => 0
+                $module_name => 0
             ]);
         } else {
             $config = $settings_model->find(1);
@@ -98,4 +102,4 @@ protected function disableModule($module_name, $row = false, $file = false)
         $ModuleManage = $module_model::find($module_name)->disable();
     }
 
-    }
+}

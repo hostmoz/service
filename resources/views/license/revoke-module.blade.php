@@ -1,9 +1,9 @@
 @if(!env('APP_SYNC'))
-    <button data-target="#license_modal" data-toggle="modal" class="primary-btn small fix-gr-bg ml-2">
+    <button data-target="#revoke_module_license_modal_{{ $name }}" data-toggle="modal" class="  btn btn-sm btn-link ml-2">
         Revoke License
     </button>
 
-    <div class="modal fade admin-query" id="license_modal" data-backdrop="statik">
+    <div class="modal fade admin-query" id="revoke_module_license_modal_{{ $name }}" data-backdrop="static">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
