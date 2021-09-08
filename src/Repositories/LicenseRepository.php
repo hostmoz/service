@@ -5,6 +5,7 @@ ini_set('max_execution_time', -1);
 
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Throwable;
 
@@ -31,7 +32,7 @@ class LicenseRepository
         $url = config('app.verifier') . '/api/cc?a=remove&u=' . app_url() . '&ac=' . $ac . '&i=' . config('app.item') . '&e=' . $e . '&c=' . $c . '&v=' . $v;
 
         $response = curlIt($url);
-
+        Log::info($response);
         Auth::logout();
 
         Artisan::call('db:wipe', ['--force' => true]);
@@ -70,9 +71,14 @@ class LicenseRepository
             $item_id = $array[$name]['item_id'];
             $version = $array[$name]['versions'][0];
 
+            if(!$s->purchase_code){
+                Log::info('Module purchase code not found');
+            }
+
             $url = config('app.verifier') . '/api/cc?a=remove&u=' . app_url() . '&ac=' . $s->purchase_code . '&i=' . $item_id . '&t=Module' . '&v=' . $version . '&e=' . $e;
 
             $response = curlIt($url);
+            Log::info($response);
             $s->delete();
             $this->disableModule($name, $row, $file);
         }

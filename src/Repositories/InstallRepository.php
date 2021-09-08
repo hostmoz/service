@@ -88,6 +88,10 @@ class InstallRepository
                 $settings_model_name = config('spondonit.settings_model');
                 $settings_model = new $settings_model_name;
                 $config = $settings_model->find(1);
+
+                if (!$config->system_purchase_code) {
+                    return false;
+                }
                 $url = config('app.verifier') . '/api/cc?a=install&u=' . url('/') . '&ac=' . $config->system_purchase_code . '&i=' . config('app.item') . '&e=' . $config->email;
 
                 $response = curlIt($url);
@@ -260,6 +264,11 @@ class InstallRepository
         $e = Storage::exists('.account_email') ? Storage::get('.account_email') : null;
         $c = Storage::exists('.temp_app_installed') ? Storage::get('.temp_app_installed') : null;
         $v = Storage::exists('.version') ? Storage::get('.version') : null;
+
+        if (!$ac) {
+           Log::info('Activation code not found');
+           return false;
+        }
 
 
         $url = config('app.verifier') . '/api/cc?a=verify&u=' . url('/') . '&ac=' . $ac . '&i=' . config('app.item') . '&e=' . $e . '&c=' . $c . '&v=' . $v;
