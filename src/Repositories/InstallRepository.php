@@ -88,10 +88,6 @@ class InstallRepository
                 $settings_model_name = config('spondonit.settings_model');
                 $settings_model = new $settings_model_name;
                 $config = $settings_model->find(1);
-
-                if (!$config->system_purchase_code) {
-                    return false;
-                }
                 $url = config('app.verifier') . '/api/cc?a=install&u=' . url('/') . '&ac=' . $config->system_purchase_code . '&i=' . config('app.item') . '&e=' . $config->email;
 
                 $response = curlIt($url);
@@ -100,18 +96,17 @@ class InstallRepository
                 if ($status) {
                     $checksum = $response['checksum'] ?? null;
                     $license_code = $response['license_code'] ?? null;
-                    Storage::put('.app_installed', $checksum ?? '');
-                    Storage::put('.access_code', $license_code ?? '');
-                    Storage::put('.account_email', $config->email);
-                    return true;
-                } 
-                
-                return false;
-              
-               
-            }
+                    $response = true;
+                } else {
+                    return false;
+                }
 
-            return false;
+                Storage::put('.app_installed', $checksum ?? '');
+                Storage::put('.access_code', $license_code ?? '');
+                Storage::put('.account_email', $config->email);
+
+                return true;
+            }
 
         } catch (Exception $e) {
             Log::error($e);
@@ -181,7 +176,7 @@ class InstallRepository
         $this->setDBEnv($params);
 
         if (gbv($params, 'force_migrate')) {
-            Artisan::call('db:wipe', ['--force' => true]);
+            $this->dbWipe();
         }
 
         return true;
@@ -265,11 +260,6 @@ class InstallRepository
         $c = Storage::exists('.temp_app_installed') ? Storage::get('.temp_app_installed') : null;
         $v = Storage::exists('.version') ? Storage::get('.version') : null;
 
-        if (!$ac) {
-           Log::info('Activation code not found');
-           return false;
-        }
-
 
         $url = config('app.verifier') . '/api/cc?a=verify&u=' . url('/') . '&ac=' . $ac . '&i=' . config('app.item') . '&e=' . $e . '&c=' . $c . '&v=' . $v;
         $response = curlIt($url);
@@ -339,21 +329,20 @@ class InstallRepository
     public function migrateDB()
     {
         try {
-            Artisan::call('migrate:refresh', array('--force' => true));
+            Artisan::call('migrate:fresh', array('--force' => true));
         } catch (Throwable $e) {
-            $this->rollbackDb();
+            $this->dbWipe();
             Log::error($e);
             $sql = base_path('database/' . config('spondonit.database_file'));
             if (File::exists($sql)) {
                 DB::unprepared(file_get_contents($sql));
             }
-
         }
     }
 
-    public function rollbackDb()
+    public function dbWipe()
     {
-        Artisan::call('migrate:rollback', array('--force' => true));
+        Artisan::call('db:wipe', array('--force' => true));
     }
 
     /**
@@ -385,7 +374,7 @@ class InstallRepository
 
         $item_id = $array[$name]['item_id'];
 
-        $url = config('app.verifier') . '/api/cc?a=install&u=' . app_url() . '&ac=' . $code . '&i=' . $item_id . '&e=' . $e . '&t=Module';
+        $url = config('app.verifier') . '/api/cc?a=install&u=' . url('/') . '&ac=' . $code . '&i=' . $item_id . '&e=' . $e . '&t=Module';
 
         $response = curlIt($url);
 
@@ -439,7 +428,7 @@ class InstallRepository
                 $r = $s->save();
 
                 $settings_model_name = config('spondonit.settings_model');
-                $settings_model = new $settings_model_name;
+                    $settings_model = new $settings_model_name;
                 if ($row) {
                     $config = $settings_model->firstOrNew(['key' => $name]);
                     $config->value = 1;
@@ -460,7 +449,7 @@ class InstallRepository
                 return true;
 
             } catch (Exception $e) {
-                DB::rollback();
+                $this->dbWipe();
                 Log::error($e);
                 $this->disableModule($name, $row, $file);
                 throw ValidationException::withMessages(['message' => $e->getMessage()]);
@@ -482,7 +471,7 @@ class InstallRepository
             $config->save();
         } else if($file){
             app('general_settings')->put([
-               $module_name => 0
+               'payroll' => 0
             ]);
         } else {
             $config = $settings_model->find(1);
