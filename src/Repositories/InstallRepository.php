@@ -176,7 +176,7 @@ class InstallRepository
         $this->setDBEnv($params);
 
         if (gbv($params, 'force_migrate')) {
-            $this->dbWipe();
+            $this->rollbackDb();
         }
 
         return true;
@@ -331,7 +331,7 @@ class InstallRepository
         try {
             Artisan::call('migrate:fresh', array('--force' => true));
         } catch (Throwable $e) {
-            $this->dbWipe();
+            $this->rollbackDb();
             Log::error($e);
             $sql = base_path('database/' . config('spondonit.database_file'));
             if (File::exists($sql)) {
@@ -340,7 +340,7 @@ class InstallRepository
         }
     }
 
-    public function dbWipe()
+    public function rollbackDb()
     {
         Artisan::call('db:wipe', array('--force' => true));
     }
@@ -449,7 +449,7 @@ class InstallRepository
                 return true;
 
             } catch (Exception $e) {
-                $this->dbWipe();
+                $this->rollbackDb();
                 Log::error($e);
                 $this->disableModule($name, $row, $file);
                 throw ValidationException::withMessages(['message' => $e->getMessage()]);
