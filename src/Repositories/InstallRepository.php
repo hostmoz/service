@@ -449,7 +449,6 @@ class InstallRepository
                 return true;
 
             } catch (Exception $e) {
-                $this->rollbackDb();
                 Log::error($e);
                 $this->disableModule($name, $row, $file);
                 throw ValidationException::withMessages(['message' => $e->getMessage()]);
