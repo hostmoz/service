@@ -387,7 +387,7 @@ class InstallRepository
             if (!$row) {
                 if (gbv($params, 'file')) {
                     app('general_settings')->put([
-                       'payroll' => 0
+                       $name => 0
                     ]);
                 } else{
                     if (!Schema::hasColumn(config('spondonit.settings_table'), $name)) {
@@ -435,7 +435,7 @@ class InstallRepository
                     $config->save();
                 }  else if($file){
                      app('general_settings')->put([
-                       'payroll' => 1
+                        $name => 1
                     ]);
                 } else {
                     $config = $settings_model->find(1);
@@ -470,7 +470,7 @@ class InstallRepository
             $config->save();
         } else if($file){
             app('general_settings')->put([
-               'payroll' => 0
+                $module_name => 0
             ]);
         } else {
             $config = $settings_model->find(1);
@@ -507,5 +507,40 @@ class InstallRepository
 
         }
         return $response;
+    }
+
+
+    public function installTheme($params)
+    {
+
+        $code = gv($params, 'purchase_code');
+        $name = gv($params, 'name');
+        $e = gv($params, 'envatouser');
+
+        $theme = DB::table(config('spondonit.theme_table', 'themes'))->where('name', $name)->first();
+        if(!$theme){
+            throw ValidationException::withMessages(['message' => 'Theme not found']);
+        }
+
+        $item_id = $theme->item_id;
+
+        $url = config('app.verifier') . '/api/cc?a=install&u=' . url('/') . '&ac=' . $code . '&i=' . $item_id . '&e=' . $e . '&t=Theme';
+
+        $response = curlIt($url);
+
+
+        $status = gbv($response, 'status');
+
+        if ($status) {
+            $theme->email = $e;
+            $theme->installed_domain = url('/');
+            $theme->activated_date = date('Y-m-d');
+            $theme->purchase_code = $code;
+            $theme->checksum = gv($response, 'checksum');
+            $theme->save();
+            return true; 
+        } else {
+            throw ValidationException::withMessages(['message' => gv($response, 'message', 'Something is not right')]);
+        }
     }
 }

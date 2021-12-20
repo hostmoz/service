@@ -6,6 +6,7 @@ ini_set('max_execution_time', -1);
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Throwable;
 
@@ -106,6 +107,34 @@ class LicenseRepository
         $module_model_name = config('spondonit.module_model');
         $module_model = new $module_model_name;
         $ModuleManage = $module_model::find($module_name)->disable();
+    }
+
+    public function revokeTheme($params)
+    {
+
+        $name = gv($params, 'name');
+        $e = Storage::exists('.account_email') ? Storage::get('.account_email') : null;
+        
+        $s = DB::table(config('spondonit.theme_table', 'themes'))->where('name', $name)->first();
+
+        if ($s) {
+            if(!$s->purchase_code){
+                Log::info('Theme purchase code not found');
+            }
+
+            $url = config('app.verifier') . '/api/cc?a=remove&u=' . app_url() . '&ac=' . $s->purchase_code . '&i=' . $s->item_id . '&t=Theme' . '&v=' . $s->version . '&e=' . $s->email;
+
+            $response = curlIt($url);
+            Log::info($response);
+            
+            $s->email = $e;
+            $s->installed_domain = null;
+            $s->activated_date = null;
+            $s->purchase_code = null;
+            $s->checksum = null;
+            $s->save();
+        }
+
     }
 
 }

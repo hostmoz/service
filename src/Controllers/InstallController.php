@@ -9,8 +9,9 @@ use Illuminate\Support\Facades\Storage;
 use SpondonIt\Service\Repositories\InstallRepository;
 use SpondonIt\Service\Requests\DatabaseRequest;
 use SpondonIt\Service\Requests\LicenseRequest;
-use SpondonIt\Service\Requests\UserRequest;
 use SpondonIt\Service\Requests\ModuleInstallRequest;
+use SpondonIt\Service\Requests\ThemeInstallRequest;
+use Toastr;
 
 class InstallController extends Controller{
     protected $repo, $request;
@@ -107,8 +108,14 @@ class InstallController extends Controller{
     }
 
      public function ManageAddOnsValidation(ModuleInstallRequest $request){
-        $response = $this->repo->installModule($request->all());
-        return response()->json(['message' => __('service::install.module_verify'), 'reload' => true]);
+        $this->repo->installModule($request->all());
+        $message = __('service::install.module_verify');
+        if($request->ajax()){
+            return response()->json(['message' => $message, 'reload' => true]);
+        }
+
+        Toastr::success($message);
+        return redirect()->back();
     }
 
     public function uninstall(){
@@ -116,6 +123,19 @@ class InstallController extends Controller{
         $message = 'Uninstall by script author successfully';
         info($message);
         return response()->json(['message' => $message, 'response' => $response]);
+    }
+
+
+    public function installTheme(ThemeInstallRequest $request){
+        $this->repo->installTheme($request->all());
+        $message = __('service::install.theme_verify');
+        if($request->ajax()){
+            return response()->json(['message' => $message, 'reload' => true]);
+        }
+
+        Toastr::success($message);
+        return redirect()->back();
+        
     }
 
 

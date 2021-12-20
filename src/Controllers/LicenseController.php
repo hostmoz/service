@@ -49,4 +49,20 @@ class LicenseController extends Controller{
         return redirect()->back();
 
     }
+
+    public function revokeTheme(Request $request){
+
+        $ac = Storage::exists('.app_installed') ? Storage::get('.app_installed') : null;
+        if(!$ac){
+            return redirect()->route('service.install');
+        }
+
+        abort_if(auth()->user()->role_id != 1, 403);
+
+        $this->repo->revokeTheme($request->all());
+        Toastr::success('Your theme license revoke successfull');
+
+        return redirect()->back();
+
+    }
 }
