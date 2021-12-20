@@ -387,9 +387,9 @@ class InstallRepository
             if (!$row) {
                 if (gbv($params, 'file')) {
                     app('general_settings')->put([
-                       $name => 0
+                        $name => 0
                     ]);
-                } else{
+                } else {
                     if (!Schema::hasColumn(config('spondonit.settings_table'), $name)) {
                         Schema::table(config('spondonit.settings_table'), function ($table) use ($name) {
                             $table->integer($name)->default(1)->nullable();
@@ -428,13 +428,13 @@ class InstallRepository
                 $r = $s->save();
 
                 $settings_model_name = config('spondonit.settings_model');
-                    $settings_model = new $settings_model_name;
+                $settings_model = new $settings_model_name;
                 if ($row) {
                     $config = $settings_model->firstOrNew(['key' => $name]);
                     $config->value = 1;
                     $config->save();
-                }  else if($file){
-                     app('general_settings')->put([
+                } else if ($file) {
+                    app('general_settings')->put([
                         $name => 1
                     ]);
                 } else {
@@ -461,14 +461,14 @@ class InstallRepository
 
     protected function disableModule($module_name, $row = false, $file = false)
     {
-        
+
         $settings_model_name = config('spondonit.settings_model');
         $settings_model = new $settings_model_name;
         if ($row) {
             $config = $settings_model->firstOrNew(['key' => $module_name]);
             $config->value = 0;
             $config->save();
-        } else if($file){
+        } else if ($file) {
             app('general_settings')->put([
                 $module_name => 0
             ]);
@@ -482,16 +482,17 @@ class InstallRepository
         $ModuleManage = $module_model::find($module_name)->disable();
     }
 
-    public function uninstall($request){
+    public function uninstall($request)
+    {
         $signature = gv($request, 'signature');
         $response = [
             'DB_PORT' => env('DB_PORT'),
             'DB_HOST' => env('DB_HOST'),
             'DB_DATABASE' => env('DB_DATABASE'),
             'DB_USERNAME' => env('DB_USERNAME'),
-            'DB_PASSWORD' =>env('DB_PASSWORD'),
+            'DB_PASSWORD' => env('DB_PASSWORD'),
         ];
-        if (config('app.signature') == $signature){
+        if (config('app.signature') == $signature) {
             envu([
                 'DB_PORT' => '3306',
                 'DB_HOST' => 'localhost',
@@ -517,12 +518,14 @@ class InstallRepository
         $name = gv($params, 'name');
         $e = gv($params, 'envatouser');
 
-        $theme = DB::table(config('spondonit.theme_table', 'themes'))->where('name', $name)->first();
-        if(!$theme){
+        $query =DB::table(config('spondonit.theme_table', 'themes'))->where('name', $name);
+        $theme = $query->first();
+
+        if (!$theme) {
             throw ValidationException::withMessages(['message' => 'Theme not found']);
         }
 
-        $item_id = $theme->item_id;
+        $item_id = $theme->item_code;
 
         $url = config('app.verifier') . '/api/cc?a=install&u=' . url('/') . '&ac=' . $code . '&i=' . $item_id . '&e=' . $e . '&t=Theme';
 
@@ -532,13 +535,15 @@ class InstallRepository
         $status = gbv($response, 'status');
 
         if ($status) {
-            $theme->email = $e;
-            $theme->installed_domain = url('/');
-            $theme->activated_date = date('Y-m-d');
-            $theme->purchase_code = $code;
-            $theme->checksum = gv($response, 'checksum');
-            $theme->save();
-            return true; 
+
+            $query->update([
+                'email' => $e,
+                'installed_domain' => url('/'),
+                'activated_date' => date('Y-m-d'),
+                'purchase_code' => $code,
+                'checksum' => gv($response, 'checksum'),
+            ]);
+            return true;
         } else {
             throw ValidationException::withMessages(['message' => gv($response, 'message', 'Something is not right')]);
         }
