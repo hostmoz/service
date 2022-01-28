@@ -121,7 +121,9 @@ if (!function_exists('nav_item_open')) {
 if (!function_exists('app_url')) {
     function app_url()
     {
-        if(function_exists('moduleStatusCheck') and moduleStatusCheck('Saas')){
+        $saas = config('spondonit.saas_module_name','Saas');
+        $module_check_function = config('spondonit.module_status_check_function','moduleStatusCheck');
+        if (function_exists($module_check_function) && $module_check_function($saas)) {
             return config('app.url');
         }
         return url('/');
