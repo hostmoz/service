@@ -156,7 +156,11 @@ class LicenseRepository
                 Cache::forget('getAllTheme');
                 Cache::forget('color_theme');
                 if (function_exists('GenerateGeneralSetting')) {
-                    GenerateGeneralSetting();
+                    if (function_exists('SaasDomain')) {
+                        GenerateGeneralSetting(SaasDomain());
+                    } else {
+                        GenerateGeneralSetting();
+                    }
                 }
 
             }
