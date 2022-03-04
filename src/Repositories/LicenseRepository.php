@@ -31,7 +31,7 @@ class LicenseRepository
         $c = Storage::exists('.app_installed') ? Storage::get('.app_installed') : null;
         $v = Storage::exists('.version') ? Storage::get('.version') : null;
 
-        $url = config('app.verifier') . '/api/cc?a=remove&u=' . app_url() . '&ac=' . $ac . '&i=' . config('app.item') . '&e=' . $e . '&c=' . $c . '&v=' . $v;
+        $url = verifyUrl(config('spondonit.verifier', 'auth')) . '/api/cc?a=remove&u=' . app_url() . '&ac=' . $ac . '&i=' . config('app.item') . '&e=' . $e . '&c=' . $c . '&v=' . $v;
 
         $response = curlIt($url);
         Log::info($response);
@@ -77,7 +77,7 @@ class LicenseRepository
                 Log::info('Module purchase code not found');
             }
 
-            $url = config('app.verifier') . '/api/cc?a=remove&u=' . app_url() . '&ac=' . $s->purchase_code . '&i=' . $item_id . '&t=Module' . '&v=' . $version . '&e=' . $e;
+            $url = verifyUrl(config('spondonit.verifier', 'auth')) . '/api/cc?a=remove&u=' . app_url() . '&ac=' . $s->purchase_code . '&i=' . $item_id . '&t=Module' . '&v=' . $version . '&e=' . $e;
 
             $response = curlIt($url);
             Log::info($response);
@@ -125,7 +125,7 @@ class LicenseRepository
             }
 
 
-            $url = config('app.verifier') . '/api/cc?a=remove&u=' . app_url() . '&ac=' . $s->purchase_code . '&i=' . $s->item_code . '&t=Theme' . '&v=' . $s->version . '&e=' . $s->email;
+            $url = verifyUrl(config('spondonit.verifier', 'auth')) . '/api/cc?a=remove&u=' . app_url() . '&ac=' . $s->purchase_code . '&i=' . $s->item_code . '&t=Theme' . '&v=' . $s->version . '&e=' . $s->email;
 
             $response = curlIt($url);
             Log::info($response);

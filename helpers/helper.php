@@ -164,3 +164,19 @@ if (!function_exists('bytesToSize')) {
         return round(pow(1024, $base - floor($base)), $precision) . ' ' . $suffixes[floor($base)];
     }
 }
+
+
+if (!function_exists('verifyUrl')) {
+    function verifyUrl($verifier = 'auth')
+    {
+        if($verifier == 'auth'){
+            $url = config('app.verifier');
+        } else{
+            $url = config('app.ux_verifier');
+        }
+
+        return $url;
+    }
+}
+
+

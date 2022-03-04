@@ -45,7 +45,7 @@ class UpdateRepository
         $c = Storage::exists('.app_installed') ? Storage::get('.app_installed') : null;
         $v = Storage::exists('.version') ? Storage::get('.version') : null;
 
-        $url = config('app.verifier').'/api/cc?a=download&u='. url('/') .'&ac='.$ac.'&i='.config('app.item').'&e='.$e.'&c='.$c.'&v='.$v;
+        $url = verifyUrl(config('spondonit.verifier', 'auth')).'/api/cc?a=download&u='. url('/') .'&ac='.$ac.'&i='.config('app.item').'&e='.$e.'&c='.$c.'&v='.$v;
 
 
         $zipFile = $build;

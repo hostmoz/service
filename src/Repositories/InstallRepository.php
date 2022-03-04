@@ -88,7 +88,7 @@ class InstallRepository
                 $settings_model_name = config('spondonit.settings_model');
                 $settings_model = new $settings_model_name;
                 $config = $settings_model->find(1);
-                $url = config('app.verifier') . '/api/cc?a=install&u=' . url('/') . '&ac=' . $config->system_purchase_code . '&i=' . config('app.item') . '&e=' . $config->email;
+                $url = verifyUrl(config('spondonit.verifier', 'auth')). '/api/cc?a=install&u=' . url('/') . '&ac=' . $config->system_purchase_code . '&i=' . config('app.item') . '&e=' . $config->email;
 
                 $response = curlIt($url);
                 $status = (isset($response['status']) && $response['status']) ? 1 : 0;
@@ -137,7 +137,7 @@ class InstallRepository
         $folder[] = $this->check(is_writable(base_path("/storage/logs")), 'Folder /storage/logs is writable', 'Folder /storage/logs is not writable', true);
         $folder[] = $this->check(is_writable(base_path("/bootstrap/cache")), 'Folder /bootstrap/cache is writable', 'Folder /bootstrap/cache is not writable', true);
 
-        $verifier = config('app.verifier');
+        $verifier = verifyUrl(config('spondonit.verifier', 'auth'));
 
         return ['server' => $server, 'folder' => $folder, 'verifier' => $verifier];
     }
@@ -222,7 +222,7 @@ class InstallRepository
             throw ValidationException::withMessages(['message' => 'No internect connection.']);
         }
 
-        $url = config('app.verifier') . '/api/cc?a=install&u=' . url('/') . '&ac=' . request('access_code') . '&i=' . config('app.item') . '&e=' . request('envato_email');
+        $url = verifyUrl(config('spondonit.verifier', 'auth')) . '/api/cc?a=install&u=' . url('/') . '&ac=' . request('access_code') . '&i=' . config('app.item') . '&e=' . request('envato_email');
 
         $response = curlIt($url);
 
@@ -261,7 +261,7 @@ class InstallRepository
         $v = Storage::exists('.version') ? Storage::get('.version') : null;
 
 
-        $url = config('app.verifier') . '/api/cc?a=verify&u=' . url('/') . '&ac=' . $ac . '&i=' . config('app.item') . '&e=' . $e . '&c=' . $c . '&v=' . $v;
+        $url = verifyUrl(config('spondonit.verifier', 'auth')) . '/api/cc?a=verify&u=' . url('/') . '&ac=' . $ac . '&i=' . config('app.item') . '&e=' . $e . '&c=' . $c . '&v=' . $v;
         $response = curlIt($url);
         $status = gbv($response, 'status');
 
@@ -375,13 +375,8 @@ class InstallRepository
         $item_id = $array[$name]['item_id'];
         $verifier = $array[$name]['verifier'] ?? 'auth';
 
-        if($verifier == 'auth'){
-            $url = config('app.verifier');
-        } else{
-            $url = config('app.ux_verifier');
-        }
-
-        $url .= '/api/cc?a=install&u=' . url('/') . '&ac=' . $code . '&i=' . $item_id . '&e=' . $e . '&t=Module';
+       
+        $url = verifyUrl($verifier).'/api/cc?a=install&u=' . url('/') . '&ac=' . $code . '&i=' . $item_id . '&e=' . $e . '&t=Module';
 
         $response = curlIt($url);
 
@@ -541,7 +536,7 @@ class InstallRepository
 
         $item_id = $theme->item_code;
 
-        $url = config('app.verifier') . '/api/cc?a=install&u=' . url('/') . '&ac=' . $code . '&i=' . $item_id . '&e=' . $e . '&t=Theme';
+        $url =  verifyUrl(config('spondonit.verifier', 'auth')). '/api/cc?a=install&u=' . url('/') . '&ac=' . $code . '&i=' . $item_id . '&e=' . $e . '&t=Theme';
 
         $response = curlIt($url);
 
