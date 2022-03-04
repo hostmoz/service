@@ -1,5 +1,7 @@
 <?php
 
+use Illuminate\Validation\ValidationException;
+
 if (!function_exists('isTestMode')) {
     function isTestMode()
     {
@@ -68,9 +70,30 @@ if (!function_exists('curlIt')) {
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Accept' => 'application/json',
+        ]);
         $response = curl_exec($ch);
+
+        if(curl_errno($ch)) {
+            if (request()->wantsJson()){
+                throw ValidationException::withMessages(['message' => 'Curl error: ' . curl_error($ch)]);
+            }
+            Toastr::error('Curl error: ' . curl_error($ch));
+            return false;
+        }
+
         curl_close($ch);
-        return json_decode($response, true);
+        $result = json_decode($response, true);
+        if ($result){
+            return $result;
+        }
+        if (request()->wantsJson()){
+            throw ValidationException::withMessages(['message' => 'We can not verify your licese. Please contact with script author.']);
+        }
+        Toastr::error('We can not verify your licese. Please contact with script author.');
+        return false;
+
     }
 }
 

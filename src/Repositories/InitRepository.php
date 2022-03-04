@@ -14,6 +14,7 @@ class InitRepository {
 
     public function init() {
         config(['app.verifier' => 'http://auth.uxseven.com']);
+        config(['app.ux_verifier' => 'http://uxauth.uxseven.com']);
         config(['app.signature' => 'eyJpdiI6Im9oMWU5Z0NoSGVwVzdmQlphaVBvd1E9PSIsInZhbHVlIjoiUURhZmpubkNBUVB6b0ZPck1v']);
     }
 
@@ -29,11 +30,11 @@ class InitRepository {
         } catch(\Exception $e){
             $error = $e->getCode();
             if($error == 2002){
-                 abort(403, 'No connection could be made because the target machine actively refused it');
+                abort(403, 'No connection could be made because the target machine actively refused it');
             } else if($error == 1045){
                 $c = Storage::exists('.app_installed') && Storage::get('.app_installed');
                 if($c){
-                     abort(403, 'Access denied for user. Please check your database username and password.');
+                    abort(403, 'Access denied for user. Please check your database username and password.');
                 }
 
             }
@@ -62,8 +63,8 @@ class InitRepository {
         $v = Storage::exists('.version') ? Storage::get('.version') : null;
 
         if (!$ac) {
-           Log::info('Activation code not found from init');
-           return false;
+            Log::info('Activation code not found from init');
+            return false;
         }
 
         $url = config('app.verifier') . '/api/cc?a=verify&u=' . app_url() . '&ac=' . $ac . '&i=' . config('app.item') . '&e=' . $e . '&c=' . $c . '&v=' . $v;
@@ -86,15 +87,15 @@ class InitRepository {
     }
 
     public function apiCheck(){
-    
+
         $ac = Storage::exists('.access_code') ? Storage::get('.access_code') : null;
         $e = Storage::exists('.account_email') ? Storage::get('.account_email') : null;
         $c = Storage::exists('.app_installed') ? Storage::get('.app_installed') : null;
         $v = Storage::exists('.version') ? Storage::get('.version') : null;
 
         if (!$ac) {
-           Log::info('Activation code not found from apicheck');
-           return false;
+            Log::info('Activation code not found from apicheck');
+            return false;
         }
         $url = config('app.verifier') . '/api/cc?a=verify&u=' . app_url() . '&ac=' . $ac . '&i=' . config('app.item') . '&e=' . $e . '&c=' . $c . '&v=' . $v;
         $response = curlIt($url);
@@ -112,7 +113,7 @@ class InitRepository {
         }
     }
 
-     public function product() {
+    public function product() {
         if (!isConnected()) {
             throw ValidationException::withMessages(['message' => 'No internect connection.']);
         }

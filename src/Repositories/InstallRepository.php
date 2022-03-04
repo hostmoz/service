@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Schema;
 use Throwable;
+use Toastr;
 
 class InstallRepository
 {
@@ -69,7 +70,6 @@ class InstallRepository
             DB::connection()->getPdo();
             return (Storage::exists('.install_count') ? Storage::get('.install_count') : 0) and (Artisan::call('spondonit:migrate-status'));
         } catch (Exception $e) {
-            Log::error($e);
             return false;
         }
     }
@@ -219,7 +219,7 @@ class InstallRepository
         }
 
         if (!isConnected()) {
-            return;
+            throw ValidationException::withMessages(['message' => 'No internect connection.']);
         }
 
         $url = config('app.verifier') . '/api/cc?a=install&u=' . url('/') . '&ac=' . request('access_code') . '&i=' . config('app.item') . '&e=' . request('envato_email');
@@ -252,7 +252,7 @@ class InstallRepository
         }
 
         if (!isConnected()) {
-            return;
+            throw ValidationException::withMessages(['message' => 'No internect connection.']);
         }
 
         $ac = Storage::exists('.access_code') ? Storage::get('.access_code') : null;
@@ -373,36 +373,42 @@ class InstallRepository
         $array = json_decode($strJsonFileContents, true);
 
         $item_id = $array[$name]['item_id'];
+        $verifier = $array[$name]['verifier'] ?? 'auth';
 
-        $url = config('app.verifier') . '/api/cc?a=install&u=' . url('/') . '&ac=' . $code . '&i=' . $item_id . '&e=' . $e . '&t=Module';
+        if($verifier == 'auth'){
+            $url = config('app.verifier');
+        } else{
+            $url = config('app.ux_verifier');
+        }
+
+        $url .= '/api/cc?a=install&u=' . url('/') . '&ac=' . $code . '&i=' . $item_id . '&e=' . $e . '&t=Module';
 
         $response = curlIt($url);
 
 
         $status = gbv($response, 'status');
 
+        if (!$row) {
+            if (gbv($params, 'file')) {
+                app('general_settings')->put([
+                    $name => 0
+                ]);
+            } else {
+                if (!Schema::hasColumn(config('spondonit.settings_table'), $name)) {
+                    Schema::table(config('spondonit.settings_table'), function ($table) use ($name) {
+                        $table->integer($name)->default(1)->nullable();
+                    });
+                }
+            }
+        } else {
+            $settings_model_name = config('spondonit.settings_model');
+            $settings_model = new $settings_model_name;
+            $config = $settings_model->firstOrCreate(['key' => $name]);
+        }
+
         if ($status) {
 
             // added a new column in sm general settings
-            if (!$row) {
-                if (gbv($params, 'file')) {
-                    app('general_settings')->put([
-                        $name => 0
-                    ]);
-                } else {
-                    if (!Schema::hasColumn(config('spondonit.settings_table'), $name)) {
-                        Schema::table(config('spondonit.settings_table'), function ($table) use ($name) {
-                            $table->integer($name)->default(1)->nullable();
-                        });
-                    }
-                }
-            } else {
-                $settings_model_name = config('spondonit.settings_model');
-                $settings_model = new $settings_model_name;
-                $config = $settings_model->firstOrCreate(['key' => $name]);
-            }
-
-
             try {
 
                 $version = $array[$name]['versions'][0];
@@ -451,11 +457,19 @@ class InstallRepository
             } catch (Exception $e) {
                 Log::error($e);
                 $this->disableModule($name, $row, $file);
-                throw ValidationException::withMessages(['message' => $e->getMessage()]);
+                if (request()->wantsJson()){
+                    throw ValidationException::withMessages(['message' => $e->getMessage()]);
+                }
+                Toastr::error($e->getMessage());
+                return false;
             }
         } else {
             $this->disableModule($name, $row);
-            throw ValidationException::withMessages(['message' => gv($response, 'message', 'Something is not right')]);
+            if (request()->wantsJson()){
+                throw ValidationException::withMessages(['message' => gv($response, 'message', 'Something is not right')]);
+            }
+            Toastr::error(gv($response, 'message', 'Something is not right'));
+            return false;
         }
     }
 
