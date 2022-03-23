@@ -74,25 +74,9 @@ if (!function_exists('curlIt')) {
             'Accept' => 'application/json',
         ]);
         $response = curl_exec($ch);
-
-        if(curl_errno($ch)) {
-            if (request()->wantsJson()){
-                throw ValidationException::withMessages(['message' => 'Curl error: ' . curl_error($ch)]);
-            }
-            Toastr::error('Curl error: ' . curl_error($ch));
-            return false;
-        }
-
         curl_close($ch);
         $result = json_decode($response, true);
-        if ($result){
-            return $result;
-        }
-        if (request()->wantsJson()){
-            throw ValidationException::withMessages(['message' => 'We can not verify your licese. Please contact with script author.']);
-        }
-        Toastr::error('We can not verify your licese. Please contact with script author.');
-        return false;
+        return $result;
 
     }
 }
