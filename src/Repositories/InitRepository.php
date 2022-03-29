@@ -80,10 +80,9 @@ class InitRepository {
                 Storage::put('.app_installed', '');
                 Auth::logout();
                 return redirect()->route('service.install')->send();
-            } else {
-                Storage::put('.access_log', date('Y-m-d'));
             }
         }
+        Storage::put('.access_log', date('Y-m-d'));
     }
 
     public function apiCheck(){

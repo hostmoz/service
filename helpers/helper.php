@@ -1,6 +1,6 @@
 <?php
 
-use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Http;
 
 if (!function_exists('isTestMode')) {
     function isTestMode()
@@ -65,18 +65,11 @@ if (!function_exists('curlIt')) {
     function curlIt($url, $postData = array())
     {
         $url  = preg_replace("/\r|\n/", "", $url);
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, [
-            'Accept' => 'application/json',
-        ]);
-        $response = curl_exec($ch);
-        curl_close($ch);
-        $result = json_decode($response, true);
-        return $result;
+        $response = Http::timeout(3)->acceptJson()->get($url);
+        if($response->successful()){
+            return $response->json();
+        }
+        return null;
 
     }
 }
