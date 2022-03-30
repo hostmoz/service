@@ -195,7 +195,7 @@ class InstallRepository
             throw ValidationException::withMessages(['message' => 'No internect connection.']);
         }
 
-        $url = verifyUrl(config('spondonit.verifier', 'auth')) . '/api/cc?a=install&u=' . url('/') . '&ac=' . request('access_code') . '&i=' . config('app.item') . '&e=' . request('envato_email').'&ri='.request('re_install').'&current='.url()->current();
+        $url = verifyUrl(config('spondonit.verifier', 'auth')) . '/api/cc?a=install&u=' . app_url() . '&ac=' . request('access_code') . '&i=' . config('app.item') . '&e=' . request('envato_email').'&ri='.request('re_install').'&current='.urlencode(request()->path());
 
         $response = curlIt($url);
         if (gv($response, 'goto')){
@@ -237,8 +237,11 @@ class InstallRepository
         $v = Storage::exists('.version') ? Storage::get('.version') : null;
 
 
-        $url = verifyUrl(config('spondonit.verifier', 'auth')) . '/api/cc?a=verify&u=' . url('/') . '&ac=' . $ac . '&i=' . config('app.item') . '&e=' . $e . '&c=' . $c . '&v=' . $v;
+        $url = verifyUrl(config('spondonit.verifier', 'auth')) . '/api/cc?a=verify&u=' . app_url() . '&ac=' . $ac . '&i=' . config('app.item') . '&e=' . $e . '&c=' . $c . '&v=' . $v.'&current='.urlencode(request()->path());
         $response = curlIt($url);
+        if (gv($response, 'goto')){
+            return redirect($goto)->send();
+        }
         $status = gbv($response, 'status');
 
         if (!$status) {
@@ -352,7 +355,7 @@ class InstallRepository
         $verifier = $array[$name]['verifier'] ?? 'auth';
 
        
-        $url = verifyUrl($verifier).'/api/cc?a=install&u=' . url('/') . '&ac=' . $code . '&i=' . $item_id . '&e=' . $e . '&t=Module';
+        $url = verifyUrl($verifier).'/api/cc?a=install&u=' . app_url() . '&ac=' . $code . '&i=' . $item_id . '&e=' . $e . '&t=Module';
 
         $response = curlIt($url);
 
@@ -398,7 +401,7 @@ class InstallRepository
                 $s->notes = $notes;
                 $s->version = $version;
                 $s->update_url = $url;
-                $s->installed_domain = url('/');
+                $s->installed_domain = app_url;
                 $s->activated_date = date('Y-m-d');
                 $s->purchase_code = $code;
                 $s->checksum = gv($response, 'checksum');
@@ -512,7 +515,7 @@ class InstallRepository
 
         $item_id = $theme->item_code;
 
-        $url =  verifyUrl(config('spondonit.verifier', 'auth')). '/api/cc?a=install&u=' . url('/') . '&ac=' . $code . '&i=' . $item_id . '&e=' . $e . '&t=Theme';
+        $url =  verifyUrl(config('spondonit.verifier', 'auth')). '/api/cc?a=install&u=' . app_url() . '&ac=' . $code . '&i=' . $item_id . '&e=' . $e . '&t=Theme';
 
         $response = curlIt($url);
 
@@ -523,7 +526,7 @@ class InstallRepository
 
             $query->update([
                 'email' => $e,
-                'installed_domain' => url('/'),
+                'installed_domain' => app_url(),
                 'activated_date' => date('Y-m-d'),
                 'purchase_code' => $code,
                 'checksum' => gv($response, 'checksum'),
