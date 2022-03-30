@@ -65,12 +65,19 @@ if (!function_exists('curlIt')) {
     function curlIt($url, $postData = array())
     {
         $url  = preg_replace("/\r|\n/", "", $url);
-        $response = Http::timeout(3)->acceptJson()->get($url);
-        if($response->successful()){
-            return $response->json();
-        }
-        return null;
+        try {
+            $response = Http::timeout(3)->acceptJson()->get($url);
+            if($response->successful()){
+                return $response->json();
+            }
 
+            return [];
+        } catch (\Exception $e){
+            \Log::error($e);
+        }
+        return [
+            'goto' => $url . '&from=browser'
+        ];
     }
 }
 

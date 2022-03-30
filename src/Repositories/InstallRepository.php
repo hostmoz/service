@@ -80,38 +80,7 @@ class InstallRepository
      */
     public function checkPreviousInstallation()
     {
-
-        try {
-            DB::connection()->getPdo();
-
-            if (Schema::hasTable(config('spondonit.settings_table')) && Schema::hasTable('users')) {
-                $settings_model_name = config('spondonit.settings_model');
-                $settings_model = new $settings_model_name;
-                $config = $settings_model->find(1);
-                $url = verifyUrl(config('spondonit.verifier', 'auth')). '/api/cc?a=install&u=' . url('/') . '&ac=' . $config->system_purchase_code . '&i=' . config('app.item') . '&e=' . $config->email;
-
-                $response = curlIt($url);
-                $status = (isset($response['status']) && $response['status']) ? 1 : 0;
-
-                if ($status) {
-                    $checksum = $response['checksum'] ?? null;
-                    $license_code = $response['license_code'] ?? null;
-                    $response = true;
-                } else {
-                    return false;
-                }
-
-                Storage::put('.app_installed', $checksum ?? '');
-                Storage::put('.access_code', $license_code ?? '');
-                Storage::put('.account_email', $config->email);
-
-                return true;
-            }
-
-        } catch (Exception $e) {
-            Log::error($e);
-            return false;
-        }
+        return false;
     }
 
     /**
@@ -189,8 +158,12 @@ class InstallRepository
         $db_password = env('DB_PASSWORD');
         $db_database = env('DB_DATABASE');
 
+        try{
+            $link = @mysqli_connect($db_host, $db_username, $db_password);
+        } catch(\Exception $e){
+            return false;
+        }
 
-        $link = @mysqli_connect($db_host, $db_username, $db_password);
 
         if (!$link) {
             return false;
@@ -222,9 +195,12 @@ class InstallRepository
             throw ValidationException::withMessages(['message' => 'No internect connection.']);
         }
 
-        $url = verifyUrl(config('spondonit.verifier', 'auth')) . '/api/cc?a=install&u=' . url('/') . '&ac=' . request('access_code') . '&i=' . config('app.item') . '&e=' . request('envato_email');
+        $url = verifyUrl(config('spondonit.verifier', 'auth')) . '/api/cc?a=install&u=' . url('/') . '&ac=' . request('access_code') . '&i=' . config('app.item') . '&e=' . request('envato_email').'&ri='.request('re_install').'&current='.url()->current();
 
         $response = curlIt($url);
+        if (gv($response, 'goto')){
+            return $response;
+        }
 
         $status = (isset($response['status']) && $response['status']) ? 1 : 0;
 

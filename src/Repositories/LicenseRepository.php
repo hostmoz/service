@@ -49,6 +49,10 @@ class LicenseRepository
 
         Storage::delete(['.access_code', '.account_email']);
         Storage::put('.app_installed', '');
+
+        if($goto = gv($response, 'goto')){
+            return redirect($goto)->send();
+        }
     }
 
 

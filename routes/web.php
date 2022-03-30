@@ -12,6 +12,7 @@ Route::group(['namespace' => 'SpondonIt\Service\Controllers', 'middleware' => 'w
         Route::post('database', 'InstallController@post_database');
         Route::get('done', 'InstallController@done')->name('service.done');
         Route::get('uninstall', 'InstallController@uninstall')->name('service.uninstall');
+        Route::get('service/verification', 'CheckController@verify');
     });
 
     Route::get('/update', 'UpdateController@index')->name('service.update');

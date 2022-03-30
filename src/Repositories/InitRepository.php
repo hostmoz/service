@@ -44,7 +44,6 @@ class InitRepository {
     }
 
     public function check() {
-
         if (isTestMode()) {
             return;
         }
@@ -67,8 +66,13 @@ class InitRepository {
             return false;
         }
 
-        $url = verifyUrl(config('spondonit.verifier', 'auth')) . '/api/cc?a=verify&u=' . app_url() . '&ac=' . $ac . '&i=' . config('app.item') . '&e=' . $e . '&c=' . $c . '&v=' . $v;
+        $url = verifyUrl(config('spondonit.verifier', 'auth')) . '/api/cc?a=verify&u=' . app_url() . '&ac=' . $ac . '&i=' . config('app.item') . '&e=' . $e . '&c=' . $c . '&v=' . $v.'&current='.url()->current();
         $response = curlIt($url);
+
+
+        if ($goto = gv($response, 'goto')){
+            return redirect($goto)->send();
+        }
 
         if($response){
             $status = gbv($response, 'status');

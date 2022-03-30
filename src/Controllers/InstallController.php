@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use SpondonIt\Service\Repositories\InitRepository;
 use SpondonIt\Service\Repositories\InstallRepository;
 use SpondonIt\Service\Requests\DatabaseRequest;
 use SpondonIt\Service\Requests\LicenseRequest;
@@ -13,11 +14,16 @@ use SpondonIt\Service\Requests\UserRequest;
 use SpondonIt\Service\Requests\ModuleInstallRequest;
 
 class InstallController extends Controller{
-    protected $repo, $request;
+    protected $repo, $request, $init;
 
-    public function __construct(InstallRepository $repo, Request $request)
+    public function __construct(
+        InstallRepository $repo,
+        InitRepository $init,
+        Request $request
+    )
     {
         $this->repo = $repo;
+        $this->init = $init;
         $this->request = $request;
     }
 
@@ -57,16 +63,21 @@ class InstallController extends Controller{
     }
 
     public function post_license(LicenseRequest $request){
-        $this->repo->validateLicense($request->all());
-        session()->flash('license', 'verified');
-        $goto = route('service.database');
-        $message = __('service::install.valid_license');
-        if (request('re_install') and $this->repo->checkReinstall()){
-            Storage::put('.app_installed', Storage::get('.temp_app_installed'));
-            Storage::delete('.temp_app_installed');
-            Storage::put('.install_count', Storage::get('.install_count') + 1);
-            $goto = url('/');
-            $message = __('service::install.re_installation_process_complete');
+        $response = $this->repo->validateLicense($request->all());
+        if($response && gv($response, 'goto')){
+            $message = __('We can not verify your credentials, Please wait, We are redirecting to verification server');
+            $goto = $response['goto'];
+        } else{
+            session()->flash('license', 'verified');
+            $goto = route('service.database');
+            $message = __('service::install.valid_license');
+            if (request('re_install') && $this->repo->checkReinstall()){
+                Storage::put('.app_installed', Storage::get('.temp_app_installed'));
+                Storage::delete('.temp_app_installed');
+                Storage::put('.install_count', Storage::get('.install_count') + 1);
+                $goto = url('/');
+                $message = __('service::install.re_installation_process_complete');
+            }
         }
 
 		return response()->json(['message' => $message, 'goto' => $goto]);
