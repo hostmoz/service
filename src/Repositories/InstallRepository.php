@@ -401,7 +401,7 @@ class InstallRepository
                 $s->notes = $notes;
                 $s->version = $version;
                 $s->update_url = $url;
-                $s->installed_domain = app_url;
+                $s->installed_domain = app_url();
                 $s->activated_date = date('Y-m-d');
                 $s->purchase_code = $code;
                 $s->checksum = gv($response, 'checksum');
