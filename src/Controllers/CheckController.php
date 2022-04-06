@@ -79,8 +79,8 @@ class CheckController extends Controller
             $checksum = $response['checksum'] ?? null;
             $license_code = $response['license_code'] ?? null;
 
-            if (gbv($params, 're_install') && $this->repo->checkReinstall()) {
-                Storage::put('.app_installed', Storage::get('.temp_app_installed'));
+            if (gbv($params, 'ri')) {
+                Storage::put('.app_installed', $checksum);
                 Storage::put('.install_count', Storage::get('.install_count') + 1);
                 $goto = url('/');
                 $message = __('service::install.re_installation_process_complete');
