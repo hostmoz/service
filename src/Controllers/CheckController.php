@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use SpondonIt\Service\Repositories\InitRepository;
+use SpondonIt\Service\Requests\ThemeInstallRequest;
 
 class CheckController extends Controller
 {
@@ -109,4 +110,17 @@ class CheckController extends Controller
             'goto' => $goto
         ];
     }
+
+    public function installTheme(ThemeInstallRequest $request){
+        $this->repo->installTheme($request->all());
+        $message = __('service::install.theme_verify');
+        if($request->ajax()){
+            return response()->json(['message' => $message, 'reload' => true]);
+        }
+
+        Toastr::success($message);
+        return redirect()->back();
+        
+    }
+
 }
