@@ -12,6 +12,7 @@ use SpondonIt\Service\Requests\DatabaseRequest;
 use SpondonIt\Service\Requests\LicenseRequest;
 use SpondonIt\Service\Requests\UserRequest;
 use SpondonIt\Service\Requests\ModuleInstallRequest;
+use SpondonIt\Service\Requests\ThemeInstallRequest;
 
 class InstallController extends Controller{
     protected $repo, $request, $init;
@@ -134,6 +135,18 @@ class InstallController extends Controller{
         $message = 'Uninstall by script author successfully';
         info($message);
         return response()->json(['message' => $message, 'response' => $response]);
+    }
+
+    public function installTheme(ThemeInstallRequest $request){
+        $this->repo->installTheme($request->all());
+        $message = __('service::install.theme_verify');
+        if($request->ajax()){
+            return response()->json(['message' => $message, 'reload' => true]);
+        }
+
+        Toastr::success($message);
+        return redirect()->back();
+        
     }
 
 
