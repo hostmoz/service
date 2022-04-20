@@ -34,7 +34,8 @@ class CheckController extends Controller
 
             if(gv($params, 'a') == 'verify'){
                 Log::info('Initial License Verification failed. Message: '. gv($response, 'message'));
-                Storage::delete(['.access_code', '.account_email', '.temp_app_installed']);
+                Storage::delete(['.access_code', '.account_email']);
+                Storage::deleteDirectory(config('app.item'));
                 Storage::put('.app_installed', '');
                 Storage::put('.logout', 'true');
                 Auth::logout();

@@ -1,6 +1,11 @@
 <?php
 
+use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
+use SpondonIt\Service\Repositories\InitRepository;
+use SpondonIt\Service\Repositories\InstallRepository;
 
 if (!function_exists('isTestMode')) {
     function isTestMode()
@@ -67,12 +72,12 @@ if (!function_exists('curlIt')) {
         $url  = preg_replace("/\r|\n/", "", $url);
         try {
             $response = Http::timeout(3)->acceptJson()->get($url);
-            if($response->successful()){
+            if ($response->successful()) {
                 return $response->json();
             }
 
             return [];
-        } catch (\Exception $e){
+        } catch (\Exception $e) {
             \Log::error($e);
         }
         return [
@@ -128,8 +133,8 @@ if (!function_exists('nav_item_open')) {
 if (!function_exists('app_url')) {
     function app_url()
     {
-        $saas = config('spondonit.saas_module_name','Saas');
-        $module_check_function = config('spondonit.module_status_check_function','moduleStatusCheck');
+        $saas = config('spondonit.saas_module_name', 'Saas');
+        $module_check_function = config('spondonit.module_status_check_function', 'moduleStatusCheck');
         if (function_exists($module_check_function) && $module_check_function($saas)) {
             return config('app.url');
         }
@@ -153,9 +158,9 @@ if (!function_exists('bytesToSize')) {
 if (!function_exists('verifyUrl')) {
     function verifyUrl($verifier = 'auth')
     {
-        if($verifier == 'auth'){
+        if ($verifier == 'auth') {
             $url = config('app.verifier');
-        } else{
+        } else {
             $url = config('app.ux_verifier');
         }
 
@@ -163,4 +168,25 @@ if (!function_exists('verifyUrl')) {
     }
 }
 
+function moduleVerify($file, $type = null)
+{
 
+    $filename = pathinfo($file, PATHINFO_FILENAME);
+
+    $repo = App::make(InstallRepository::class);
+
+    $params = [
+        'name' => $filename,
+        'item_id' => config('app.item'),
+        'envatouser' => Storage::exists('.account_email') ? Storage::get('.account_email') : null,
+        'tariq' => true,
+    ];
+
+    if ($type) {
+        $params += [
+            $type => true,
+        ];
+    }
+
+    return $repo->installModule($params);
+}

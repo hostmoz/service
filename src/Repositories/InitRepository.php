@@ -65,8 +65,8 @@ class InitRepository {
             Log::info('Activation code not found from init');
             return false;
         }
-
-        $url = verifyUrl(config('spondonit.verifier', 'auth')) . '/api/cc?a=verify&u=' . app_url() . '&ac=' . $ac . '&i=' . config('app.item') . '&e=' . $e . '&c=' . $c . '&v=' . $v.'&current='.urlencode(request()->path());
+        $ve = Storage::exists('.ve') ? Storage::get('.ve') : 'e';
+        $url = verifyUrl(config('spondonit.verifier', 'auth')) . '/api/cc?a=verify&u=' . app_url() . '&ac=' . $ac . '&i=' . config('app.item') . '&e=' . $e . '&c=' . $c . '&v=' . $v.'&current='.urlencode(request()->path()).'&ve='.$ve;
         $response = curlIt($url);
 
 
@@ -81,6 +81,7 @@ class InitRepository {
                 Log::info('Initial License Verification failed. Message: '. gv($response, 'message'));
 
                 Storage::delete(['.access_code', '.account_email']);
+                Storage::deleteDirectory(config('app.item'));
                 Storage::put('.app_installed', '');
                 Auth::logout();
                 return redirect()->route('service.install')->send();
@@ -100,7 +101,8 @@ class InitRepository {
             Log::info('Activation code not found from apicheck');
             return false;
         }
-        $url = verifyUrl(config('spondonit.verifier', 'auth')) . '/api/cc?a=verify&u=' . app_url() . '&ac=' . $ac . '&i=' . config('app.item') . '&e=' . $e . '&c=' . $c . '&v=' . $v;
+        $ve = Storage::exists('.ve') ? Storage::get('.ve') : 'e';
+        $url = verifyUrl(config('spondonit.verifier', 'auth')) . '/api/cc?a=verify&u=' . app_url() . '&ac=' . $ac . '&i=' . config('app.item') . '&e=' . $e . '&c=' . $c . '&v=' . $v.'&ve='.$ve;
         $response = curlIt($url);
 
         if($response){

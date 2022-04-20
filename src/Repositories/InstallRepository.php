@@ -1,6 +1,7 @@
 <?php
 
 namespace SpondonIt\Service\Repositories;
+
 ini_set('max_execution_time', -1);
 
 use Carbon\Carbon;
@@ -24,7 +25,6 @@ class InstallRepository
      */
     public function __construct()
     {
-
     }
 
     public function checkInstallation()
@@ -139,7 +139,6 @@ class InstallRepository
             if ($count_table) {
                 throw ValidationException::withMessages(['message' => trans('service::install.existing_table_in_database')]);
             }
-
         }
 
         $this->setDBEnv($params);
@@ -158,9 +157,9 @@ class InstallRepository
         $db_password = env('DB_PASSWORD');
         $db_database = env('DB_DATABASE');
 
-        try{
+        try {
             $link = @mysqli_connect($db_host, $db_username, $db_password);
-        } catch(\Exception $e){
+        } catch (\Exception $e) {
             return false;
         }
 
@@ -194,11 +193,11 @@ class InstallRepository
         if (!isConnected()) {
             throw ValidationException::withMessages(['message' => 'No internect connection.']);
         }
-
-        $url = verifyUrl(config('spondonit.verifier', 'auth')) . '/api/cc?a=install&u=' . app_url() . '&ac=' . request('access_code') . '&i=' . config('app.item') . '&e=' . request('envato_email').'&ri='.request('re_install').'&current='.urlencode(request()->path());
+        $ve = Storage::exists('.ve') ? Storage::get('.ve') : 'e';
+        $url = verifyUrl(config('spondonit.verifier', 'auth')) . '/api/cc?a=install&u=' . app_url() . '&ac=' . request('access_code') . '&i=' . config('app.item') . '&e=' . request('envato_email') . '&ri=' . request('re_install') . '&current=' . urlencode(request()->path()) . '&ve=' . $ve;
 
         $response = curlIt($url);
-        if (gv($response, 'goto')){
+        if (gv($response, 'goto')) {
             return $response;
         }
 
@@ -207,6 +206,7 @@ class InstallRepository
         if ($status) {
             $checksum = $response['checksum'] ?? null;
             $license_code = $response['license_code'] ?? null;
+            $modules = gv($response, 'modules', []);
         } else {
             $message = gv($response, 'message') ? $response['message'] : trans('service::install.contact_script_author');
             throw ValidationException::withMessages(['access_code' => $message]);
@@ -217,8 +217,16 @@ class InstallRepository
         Storage::put('.account_email', request('envato_email'));
         Storage::put('.access_log', date('Y-m-d'));
 
-        return true;
+        $folder = storage_path('app' . DIRECTORY_SEPARATOR . config('app.item'));
+        File::ensureDirectoryExists($folder);
 
+        foreach ($modules as $module) {
+            if ($code = gv($module, 'code')) {
+                File::put($folder . DIRECTORY_SEPARATOR . '.' . $code, request('access_code'));
+            }
+        }
+
+        return true;
     }
 
     public function checkLicense()
@@ -237,9 +245,9 @@ class InstallRepository
         $v = Storage::exists('.version') ? Storage::get('.version') : null;
 
 
-        $url = verifyUrl(config('spondonit.verifier', 'auth')) . '/api/cc?a=verify&u=' . app_url() . '&ac=' . $ac . '&i=' . config('app.item') . '&e=' . $e . '&c=' . $c . '&v=' . $v.'&current='.urlencode(request()->path());
+        $url = verifyUrl(config('spondonit.verifier', 'auth')) . '/api/cc?a=verify&u=' . app_url() . '&ac=' . $ac . '&i=' . config('app.item') . '&e=' . $e . '&c=' . $c . '&v=' . $v . '&current=' . urlencode(request()->path());
         $response = curlIt($url);
-        if (gv($response, 'goto')){
+        if (gv($response, 'goto')) {
             return redirect($goto)->send();
         }
         $status = gbv($response, 'status');
@@ -247,6 +255,7 @@ class InstallRepository
         if (!$status) {
             Log::info('License Verification failed');
             Storage::delete(['.access_code', '.account_email']);
+            Storage::deleteDirectory(config('app.item'));
             Storage::put('.temp_app_installed', '');
             return false;
         } else {
@@ -270,8 +279,6 @@ class InstallRepository
         Storage::put('.user_pass', gv($params, 'password'));
 
         Storage::delete('.temp_app_installed');
-
-
     }
 
 
@@ -352,13 +359,26 @@ class InstallRepository
         $array = json_decode($strJsonFileContents, true);
 
         $item_id = $array[$name]['item_id'];
-        $verifier = $array[$name]['verifier'] ?? 'auth';
 
-       
-        $url = verifyUrl($verifier).'/api/cc?a=install&u=' . app_url() . '&ac=' . $code . '&i=' . $item_id . '&e=' . $e . '&t=Module';
+        $ve = gv($array[$name], 've', 'e');
+
+        $module_file = storage_path('app' . DIRECTORY_SEPARATOR . config('app.item') . DIRECTORY_SEPARATOR . '.' . $item_id);
+   
+
+        if (file_exists($module_file)) {
+            if (!$code) {
+                $code = file_get_contents($module_file);
+            }
+            $item_id = config('app.item');
+        } else if(gbv($params, 'tariq')){
+            return false;
+        }
+
+        $verifier = $array[$name]['verifier'] ?? 'auth';
+        
+        $url = verifyUrl($verifier) . '/api/cc?a=install&u=' . app_url() . '&ac=' . $code . '&i=' . $item_id . '&e=' . $e . '&t=Module&ve=' . $ve;
 
         $response = curlIt($url);
-
 
         $status = gbv($response, 'status');
 
@@ -427,11 +447,10 @@ class InstallRepository
 
 
                 return true;
-
             } catch (Exception $e) {
                 Log::error($e);
                 $this->disableModule($name, $row, $file);
-                if (request()->wantsJson()){
+                if (request()->wantsJson()) {
                     throw ValidationException::withMessages(['message' => $e->getMessage()]);
                 }
                 Toastr::error($e->getMessage());
@@ -439,7 +458,7 @@ class InstallRepository
             }
         } else {
             $this->disableModule($name, $row);
-            if (request()->wantsJson()){
+            if (request()->wantsJson()) {
                 throw ValidationException::withMessages(['message' => gv($response, 'message', 'Something is not right')]);
             }
             Toastr::error(gv($response, 'message', 'Something is not right'));
@@ -493,7 +512,6 @@ class InstallRepository
             Storage::put('.app_installed', '');
             Artisan::call('optimize:clear');
             Storage::put('.logout', true);
-
         }
         return $response;
     }
@@ -506,7 +524,7 @@ class InstallRepository
         $name = gv($params, 'name');
         $e = gv($params, 'envatouser');
 
-        $query =DB::table(config('spondonit.theme_table', 'themes'))->where('name', $name);
+        $query = DB::table(config('spondonit.theme_table', 'themes'))->where('name', $name);
         $theme = $query->first();
 
         if (!$theme) {
@@ -515,7 +533,7 @@ class InstallRepository
 
         $item_id = $theme->item_code;
 
-        $url =  verifyUrl(config('spondonit.verifier', 'auth')). '/api/cc?a=install&u=' . app_url() . '&ac=' . $code . '&i=' . $item_id . '&e=' . $e . '&t=Theme';
+        $url =  verifyUrl(config('spondonit.verifier', 'auth')) . '/api/cc?a=install&u=' . app_url() . '&ac=' . $code . '&i=' . $item_id . '&e=' . $e . '&t=Theme';
 
         $response = curlIt($url);
 
