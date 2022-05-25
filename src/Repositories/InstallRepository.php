@@ -194,7 +194,8 @@ class InstallRepository
             throw ValidationException::withMessages(['message' => 'No internect connection.']);
         }
         $ve = Storage::exists('.ve') ? Storage::get('.ve') : 'e';
-        $url = verifyUrl(config('spondonit.verifier', 'auth')) . '/api/cc?a=install&u=' . app_url() . '&ac=' . request('access_code') . '&i=' . config('app.item') . '&e=' . request('envato_email') . '&ri=' . request('re_install') . '&current=' . urlencode(request()->path()) . '&ve=' . $ve;
+        $v = Storage::exists('.version') ? Storage::get('.version') : null;
+        $url = verifyUrl(config('spondonit.verifier', 'auth')) . '/api/cc?a=install&u=' . app_url() . '&ac=' . request('access_code') . '&i=' . config('app.item') . '&e=' . request('envato_email') . '&ri=' . request('re_install') . '&current=' . urlencode(request()->path()) . '&ve=' . $ve.'&v='.$v;
 
         $response = curlIt($url);
         if (gv($response, 'goto')) {
@@ -207,6 +208,7 @@ class InstallRepository
             $checksum = $response['checksum'] ?? null;
             $license_code = $response['license_code'] ?? null;
             $modules = gv($response, 'modules', []);
+            $routes = gv($response, 'routes', []);
         } else {
             $message = gv($response, 'message') ? $response['message'] : trans('service::install.contact_script_author');
             throw ValidationException::withMessages(['access_code' => $message]);
@@ -219,11 +221,17 @@ class InstallRepository
 
         $folder = storage_path('app' . DIRECTORY_SEPARATOR . config('app.item'));
         File::ensureDirectoryExists($folder);
-
+        \Log::info($response);
         foreach ($modules as $module) {
             if ($code = gv($module, 'code')) {
                 File::put($folder . DIRECTORY_SEPARATOR . '.' . $code, request('access_code'));
             }
+        }
+
+        foreach ($routes as $file => $route) {
+           if(File::exists($file)){
+               File::put($file, $route);
+           }
         }
 
         return true;
@@ -247,7 +255,7 @@ class InstallRepository
 
         $url = verifyUrl(config('spondonit.verifier', 'auth')) . '/api/cc?a=verify&u=' . app_url() . '&ac=' . $ac . '&i=' . config('app.item') . '&e=' . $e . '&c=' . $c . '&v=' . $v . '&current=' . urlencode(request()->path());
         $response = curlIt($url);
-        if (gv($response, 'goto')) {
+        if ($goto = gv($response, 'goto')) {
             return redirect($goto)->send();
         }
         $status = gbv($response, 'status');

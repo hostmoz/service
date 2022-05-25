@@ -13,6 +13,7 @@ use SpondonIt\Service\Requests\LicenseRequest;
 use SpondonIt\Service\Requests\UserRequest;
 use SpondonIt\Service\Requests\ModuleInstallRequest;
 use SpondonIt\Service\Requests\ThemeInstallRequest;
+use Toastr;
 
 class InstallController extends Controller{
     protected $repo, $request, $init;
