@@ -67,7 +67,7 @@ class InstallController extends Controller{
     public function post_license(LicenseRequest $request){
         $response = $this->repo->validateLicense($request->all());
         if($response && gv($response, 'goto')){
-            $message = __('We can not verify your credentials, Please wait');
+            $message = __('Please wait to verify the license. Thank you.');
             $goto = $response['goto'];
         } else{
             session()->flash('license', 'verified');

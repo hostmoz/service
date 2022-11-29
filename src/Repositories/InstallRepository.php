@@ -221,7 +221,6 @@ class InstallRepository
 
         $folder = storage_path('app' . DIRECTORY_SEPARATOR . config('app.item'));
         File::ensureDirectoryExists($folder);
-        \Log::info($response);
         foreach ($modules as $module) {
             if ($code = gv($module, 'code')) {
                 File::put($folder . DIRECTORY_SEPARATOR . '.' . $code, request('access_code'));
@@ -279,14 +278,18 @@ class InstallRepository
     public function install($params)
     {
 
-        $this->migrateDB();
+        if($this->migrateDB()){
+            $ac = Storage::exists('.temp_app_installed') ? Storage::get('.temp_app_installed') : null;
+            Storage::put('.app_installed', $ac);
+            Storage::put('.user_email', gv($params, 'email'));
+            Storage::put('.user_pass', gv($params, 'password'));
+    
+            Storage::delete('.temp_app_installed');
+        } else{
+            throw ValidationException::withMessages(['message' => 'There is something wrong in migration. Please contact with script author.']);
+        }
 
-        $ac = Storage::exists('.temp_app_installed') ? Storage::get('.temp_app_installed') : null;
-        Storage::put('.app_installed', $ac);
-        Storage::put('.user_email', gv($params, 'email'));
-        Storage::put('.user_pass', gv($params, 'password'));
-
-        Storage::delete('.temp_app_installed');
+        
     }
 
 
@@ -324,13 +327,15 @@ class InstallRepository
     {
         try {
             Artisan::call('migrate:fresh', array('--force' => true));
+            return true;
         } catch (Throwable $e) {
             $this->rollbackDb();
             Log::error($e);
-            $sql = base_path('database/' . config('spondonit.database_file'));
-            if (File::exists($sql)) {
-                DB::unprepared(file_get_contents($sql));
-            }
+            return false;
+            // $sql = base_path('database/' . config('spondonit.database_file'));
+            // if (File::exists($sql)) {
+            //     DB::unprepared(file_get_contents($sql));
+            // }
         }
     }
 
