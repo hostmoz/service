@@ -76,5 +76,9 @@ return array(
 "envatouser" => 'Envato Email Address',
 
 "theme_verify" => "Theme Verified Successfully",
-"theme_name" => "Theme Name"
+"theme_name" => "Theme Name",
+    "db_connection" => 'DB Connection',
+    "mysql" => 'MySQL',
+    "pgsql" => 'PostrgreSQL',
+    "db_connection_help" => "Before chose database connection, Be confirm about your server support that connection."
 );

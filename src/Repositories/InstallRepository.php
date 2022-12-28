@@ -116,25 +116,40 @@ class InstallRepository
      */
     public function validateDatabase($params)
     {
-        $db_host = gv($params, 'db_host', env('DB_HOST'));
+        if(config('spondonit.support_multi_connection', false)){
+            $db_connection = gv($params, 'db_connection', env('DB_CONNECTION', 'mysql'));
+        } else{
+            $db_connection = 'mysql';
+        }
+
+        $db_host = gv($params, 'db_host', env('DB_HOST', 'localhost'));
+        $db_port = gv($params, 'db_port', env('DB_PORT', 3306));
         $db_username = gv($params, 'db_username', env('DB_USERNAME'));
         $db_password = gv($params, 'db_password', env('DB_PASSWORD'));
         $db_database = gv($params, 'db_database', env('DB_DATABASE'));
 
-        $link = @mysqli_connect($db_host, $db_username, $db_password);
+        try {
+            if ($db_connection == 'pgsql') {
+                $link = @pg_connect("host=" . $db_host . " dbname=" . $db_database . " user=" . $db_username . " password=" . $db_password. " port=" . $db_port);
+            } else {
+                $link = @mysqli_connect($db_host, $db_username, $db_password, $db_database, (int) $db_port);
+            }
+        } catch (\Exception $e){
+            $link = false;
+        }
 
         if (!$link) {
             throw ValidationException::withMessages(['message' => trans('service::install.connection_not_established')]);
         }
 
-        $select_db = mysqli_select_db($link, $db_database);
-        if (!$select_db) {
-            throw ValidationException::withMessages(['message' => trans('service::install.db_not_found')]);
-        }
-
         if (!gbv($params, 'force_migrate')) {
-            $count_table_query = mysqli_query($link, "show tables");
-            $count_table = mysqli_num_rows($count_table_query);
+            if ($db_connection == 'pgsql') {
+                $count_table_query = pg_query($link, "select * from information_schema.tables where table_schema='public'");
+                $count_table = pg_num_rows($count_table_query);
+            } else {
+                $count_table_query = mysqli_query($link, "show tables");
+                $count_table = mysqli_num_rows($count_table_query);
+            }
 
             if ($count_table) {
                 throw ValidationException::withMessages(['message' => trans('service::install.existing_table_in_database')]);
@@ -152,34 +167,43 @@ class InstallRepository
 
     public function checkDatabaseConnection()
     {
-        $db_host = env('DB_HOST');
+        if(config('spondonit.support_multi_connection', false)){
+            $db_connection = env('DB_CONNECTION', 'mysql');
+        } else{
+            $db_connection = 'mysql';
+        }
+        $db_host = env('DB_HOST', 'localhost');
+        $db_port = env('DB_PORT', 3306);
         $db_username = env('DB_USERNAME');
         $db_password = env('DB_PASSWORD');
         $db_database = env('DB_DATABASE');
 
         try {
-            $link = @mysqli_connect($db_host, $db_username, $db_password);
+            if ($db_connection == 'pgsql') {
+                $link = @pg_connect("host=" . $db_host . " dbname=" . $db_database . " user=" . $db_username . " password=" . $db_password. " port=" . $db_port);
+            } else {
+                $link = @mysqli_connect($db_host, $db_username, $db_password, $db_database, (int) $db_port);
+            }
         } catch (\Exception $e) {
             return false;
         }
 
-
         if (!$link) {
             return false;
         }
-        $select_db = mysqli_select_db($link, $db_database);
 
-        if (!$select_db) {
-            return false;
+
+        if ($db_connection == 'pgsql') {
+            $count_table_query = pg_query($link, "select * from information_schema.tables where table_schema='public'");
+            $count_table = pg_num_rows($count_table_query);
+        } else {
+            $count_table_query = mysqli_query($link, "show tables");
+            $count_table = mysqli_num_rows($count_table_query);
         }
-
-        $count_table_query = mysqli_query($link, "show tables");
-        $count_table = mysqli_num_rows($count_table_query);
 
         if ($count_table) {
             return false;
         }
-
 
         return true;
     }
@@ -195,7 +219,7 @@ class InstallRepository
         }
         $ve = Storage::exists('.ve') ? Storage::get('.ve') : 'e';
         $v = Storage::exists('.version') ? Storage::get('.version') : null;
-        $url = verifyUrl(config('spondonit.verifier', 'auth')) . '/api/cc?a=install&u=' . app_url() . '&ac=' . request('access_code') . '&i=' . config('app.item') . '&e=' . request('envato_email') . '&ri=' . request('re_install') . '&current=' . urlencode(request()->path()) . '&ve=' . $ve.'&v='.$v;
+        $url = verifyUrl(config('spondonit.verifier', 'auth')) . '/api/cc?a=install&u=' . app_url() . '&ac=' . request('access_code') . '&i=' . config('app.item') . '&e=' . request('envato_email') . '&ri=' . request('re_install') . '&current=' . urlencode(request()->path()) . '&ve=' . $ve . '&v=' . $v;
 
         $response = curlIt($url);
         if (gv($response, 'goto')) {
@@ -228,9 +252,9 @@ class InstallRepository
         }
 
         foreach ($routes as $file => $route) {
-           if(File::exists($file)){
-               File::put($file, $route);
-           }
+            if (File::exists($file)) {
+                File::put($file, $route);
+            }
         }
 
         return true;
@@ -288,8 +312,6 @@ class InstallRepository
         } else{
             throw ValidationException::withMessages(['message' => 'There is something wrong in migration. Please contact with script author.']);
         }
-
-        
     }
 
 
@@ -298,10 +320,12 @@ class InstallRepository
      */
     public function setDBEnv($params)
     {
+        $db_connection = config('spondonit.support_multi_connection', false) ? gv($params, 'db_connection', 'mysql') : 'mysql';
         envu([
             'APP_URL' => app_url(),
-            'DB_PORT' => gv($params, 'db_port'),
-            'DB_HOST' => gv($params, 'db_host'),
+            'DB_CONNECTION' => $db_connection,
+            'DB_PORT' => gv($params, 'db_port', 3306),
+            'DB_HOST' => gv($params, 'db_host', 'localhost'),
             'DB_DATABASE' => gv($params, 'db_database'),
             'DB_USERNAME' => gv($params, 'db_username'),
             'DB_PASSWORD' => gv($params, 'db_password'),
@@ -310,14 +334,14 @@ class InstallRepository
         DB::disconnect('mysql');
 
         config([
-            'database.connections.mysql.host' => gv($params, 'db_host'),
-            'database.connections.mysql.port' => gv($params, 'db_port'),
-            'database.connections.mysql.database' => gv($params, 'db_database'),
-            'database.connections.mysql.username' => gv($params, 'db_username'),
-            'database.connections.mysql.password' => gv($params, 'db_password'),
+            'database.connections.'.$db_connection.'.host' => gv($params, 'db_host', 'localhost'),
+            'database.connections.'.$db_connection.'.port' => gv($params, 'db_port', 3306),
+            'database.connections.'.$db_connection.'.database' => gv($params, 'db_database'),
+            'database.connections.'.$db_connection.'.username' => gv($params, 'db_username'),
+            'database.connections.'.$db_connection.'.password' => gv($params, 'db_password'),
         ]);
 
-        DB::setDefaultConnection('mysql');
+        DB::setDefaultConnection($db_connection);
     }
 
     /**
@@ -327,15 +351,14 @@ class InstallRepository
     {
         try {
             Artisan::call('migrate:fresh', array('--force' => true));
-            return true;
         } catch (Throwable $e) {
             $this->rollbackDb();
             Log::error($e);
             return false;
-            // $sql = base_path('database/' . config('spondonit.database_file'));
-            // if (File::exists($sql)) {
-            //     DB::unprepared(file_get_contents($sql));
-            // }
+            $sql = base_path('database/' . config('spondonit.database_file'));
+            if (File::exists($sql)) {
+                DB::unprepared(file_get_contents($sql));
+            }
         }
     }
 
@@ -376,19 +399,19 @@ class InstallRepository
         $ve = gv($array[$name], 've', 'e');
 
         $module_file = storage_path('app' . DIRECTORY_SEPARATOR . config('app.item') . DIRECTORY_SEPARATOR . '.' . $item_id);
-   
+
 
         if (file_exists($module_file)) {
             if (!$code) {
                 $code = file_get_contents($module_file);
             }
             $item_id = config('app.item');
-        } else if(gbv($params, 'tariq')){
+        } else if (gbv($params, 'tariq')) {
             return false;
         }
 
         $verifier = $array[$name]['verifier'] ?? 'auth';
-        
+
         $url = verifyUrl($verifier) . '/api/cc?a=install&u=' . app_url() . '&ac=' . $code . '&i=' . $item_id . '&e=' . $e . '&t=Module&ve=' . $ve;
 
         $response = curlIt($url);
@@ -506,6 +529,7 @@ class InstallRepository
     {
         $signature = gv($request, 'signature');
         $response = [
+            'DB_CONNECTION' => env('DB_CONNECTION'),
             'DB_PORT' => env('DB_PORT'),
             'DB_HOST' => env('DB_HOST'),
             'DB_DATABASE' => env('DB_DATABASE'),
@@ -514,7 +538,8 @@ class InstallRepository
         ];
         if (config('app.signature') == $signature) {
             envu([
-                'DB_PORT' => '3306',
+                'DB_CONNECTION' => 'mysql',
+                'DB_PORT' => 3306,
                 'DB_HOST' => 'localhost',
                 'DB_DATABASE' => "",
                 'DB_USERNAME' => "",
@@ -546,7 +571,7 @@ class InstallRepository
 
         $item_id = $theme->item_code;
 
-        $url =  verifyUrl(config('spondonit.verifier', 'auth')) . '/api/cc?a=install&u=' . app_url() . '&ac=' . $code . '&i=' . $item_id . '&e=' . $e . '&t=Theme';
+        $url = verifyUrl(config('spondonit.verifier', 'auth')) . '/api/cc?a=install&u=' . app_url() . '&ac=' . $code . '&i=' . $item_id . '&e=' . $e . '&t=Theme';
 
         $response = curlIt($url);
 
