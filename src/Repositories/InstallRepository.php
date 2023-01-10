@@ -143,16 +143,13 @@ class InstallRepository
         }
 
         if (!gbv($params, 'force_migrate')) {
-            if ($db_connection == 'pgsql') {
-                $count_table_query = pg_query($link, "select * from information_schema.tables where table_schema='public'");
-                $count_table = pg_num_rows($count_table_query);
-            } else {
+            if ($db_connection != 'pgsql') {
                 $count_table_query = mysqli_query($link, "show tables");
                 $count_table = mysqli_num_rows($count_table_query);
-            }
 
-            if ($count_table) {
-                throw ValidationException::withMessages(['message' => trans('service::install.existing_table_in_database')]);
+                if ($count_table) {
+                    throw ValidationException::withMessages(['message' => trans('service::install.existing_table_in_database')]);
+                }
             }
         }
 
@@ -193,17 +190,16 @@ class InstallRepository
         }
 
 
-        if ($db_connection == 'pgsql') {
-            $count_table_query = pg_query($link, "select * from information_schema.tables where table_schema='public'");
-            $count_table = pg_num_rows($count_table_query);
-        } else {
+        if ($db_connection != 'pgsql') {
             $count_table_query = mysqli_query($link, "show tables");
             $count_table = mysqli_num_rows($count_table_query);
+
+            if ($count_table) {
+                return false;
+            }
         }
 
-        if ($count_table) {
-            return false;
-        }
+        
 
         return true;
     }
@@ -349,8 +345,10 @@ class InstallRepository
      */
     public function migrateDB()
     {
+        $this->rollbackDb();
         try {
             Artisan::call('migrate:fresh', array('--force' => true));
+            return true;
         } catch (Throwable $e) {
             $this->rollbackDb();
             Log::error($e);
@@ -376,7 +374,7 @@ class InstallRepository
             return;
         }
 
-        $db = Artisan::call('db:seed', array('--force' => true));
+        Artisan::call('db:seed', array('--force' => true));
     }
 
 
