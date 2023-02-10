@@ -72,7 +72,7 @@ function _formValidation(form_id = 'content_form', modal = false, modal_id = 'co
             success: function(data) {
                 form.find('input:text').val('');
                 form.find("input:text:visible:first").focus();
-                toastr.success(data.message, 'Succes');
+                toastr.success(data.message, 'Success');
                 if (ajax_table) {
                     ajax_table.ajax.reload();
                 }

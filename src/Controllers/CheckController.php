@@ -5,11 +5,13 @@ namespace SpondonIt\Service\Controllers;
 use Brian2694\Toastr\Facades\Toastr;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use SpondonIt\Service\Repositories\InitRepository;
+use SpondonIt\Service\Repositories\InstallRepository;
 
 class CheckController extends Controller
 {
@@ -25,15 +27,16 @@ class CheckController extends Controller
     public function verify()
     {
         $requests = $this->request->all();
+
         $response = gv($requests, 'response', []);
         $params = gv($requests, 'params', []);
         try {
-            if(gbv($response, 'status')){
+            if (gbv($response, 'status')) {
                 return $this->successAction($requests, $response, $params);
             }
 
-            if(gv($params, 'a') == 'verify'){
-                Log::info('Initial License Verification failed. Message: '. gv($response, 'message'));
+            if (gv($params, 'a') == 'verify') {
+                Log::info('Initial License Verification failed. Message: ' . gv($response, 'message'));
                 Storage::delete(['.access_code', '.account_email']);
                 Storage::deleteDirectory(config('app.item'));
                 Storage::put('.app_installed', '');
@@ -54,11 +57,15 @@ class CheckController extends Controller
         } catch (\Exception $e) {
 
             $message = $e->getMessage();
+
             \Log::error($e);
-            $goto = route('service.install');
-            if(gv($params, 'a') == 'verify'){
+            $goto = gv($params, 'current', url('login'));
+            if (gv($params, 'a') == 'verify') {
                 Storage::put('.access_log', date('Y-m-d'));
-                $goto = gv($params, 'current', route('dashboard'));
+            }
+
+            if(!$goto){
+                $goto = route('service.install');
             }
 
 
@@ -66,17 +73,23 @@ class CheckController extends Controller
                 Toastr::error($message);
                 return redirect($goto)->send();
             }
+
             return [
                 'status' => false,
-                'goto' => route('service.install'),
+                'goto' => $goto,
                 'message' => $e->getMessage(),
             ];
         }
     }
 
-    public function successAction($requests, $response, $params){
+    public function successAction($requests, $response, $params)
+    {
+
 
         if (gv($params, 'a') == 'install') {
+            if (gv($params, 't', 'Product') == 'Module') {
+                return $this->installModule($requests, $params, $response);
+            }
             $checksum = $response['checksum'] ?? null;
             $license_code = $response['license_code'] ?? null;
 
@@ -97,7 +110,7 @@ class CheckController extends Controller
             Toastr::success($message);
         } elseif (gv($params, 'a') == 'verify') {
             Storage::put('.access_log', date('Y-m-d'));
-            $goto = gv($params, 'current', route('dashboard'));
+            $goto = gv($params, 'current', url('dashboard'));
         }
 
 
@@ -109,6 +122,23 @@ class CheckController extends Controller
             'status' => true,
             'goto' => $goto
         ];
+    }
+
+    public function installModule($reqests, $params, $response)
+    {
+        $repo = App::make(InstallRepository::class);
+
+        $result = $repo->processModuleInstallation($params, $response);
+        $goto = gv($params, 'current', url('dashboard'));
+
+        if ($result) {
+            if (request()->wantsJson()) {
+                return response()->json(['message' => __('service::install.module_verify'), 'goto' => $goto]);
+            }
+            Toastr::success(__('service::install.module_verify'), 'Success');
+
+        }
+        return redirect()->to($goto);
     }
 
 }

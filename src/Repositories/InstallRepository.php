@@ -116,9 +116,9 @@ class InstallRepository
      */
     public function validateDatabase($params)
     {
-        if(config('spondonit.support_multi_connection', false)){
+        if (config('spondonit.support_multi_connection', false)) {
             $db_connection = gv($params, 'db_connection', env('DB_CONNECTION', 'mysql'));
-        } else{
+        } else {
             $db_connection = 'mysql';
         }
 
@@ -130,11 +130,11 @@ class InstallRepository
 
         try {
             if ($db_connection == 'pgsql') {
-                $link = @pg_connect("host=" . $db_host . " dbname=" . $db_database . " user=" . $db_username . " password=" . $db_password. " port=" . $db_port);
+                $link = @pg_connect("host=" . $db_host . " dbname=" . $db_database . " user=" . $db_username . " password=" . $db_password . " port=" . $db_port);
             } else {
-                $link = @mysqli_connect($db_host, $db_username, $db_password, $db_database, (int) $db_port);
+                $link = @mysqli_connect($db_host, $db_username, $db_password, $db_database, (int)$db_port);
             }
-        } catch (\Exception $e){
+        } catch (\Exception $e) {
             $link = false;
         }
 
@@ -164,9 +164,9 @@ class InstallRepository
 
     public function checkDatabaseConnection()
     {
-        if(config('spondonit.support_multi_connection', false)){
+        if (config('spondonit.support_multi_connection', false)) {
             $db_connection = env('DB_CONNECTION', 'mysql');
-        } else{
+        } else {
             $db_connection = 'mysql';
         }
         $db_host = env('DB_HOST', 'localhost');
@@ -177,9 +177,9 @@ class InstallRepository
 
         try {
             if ($db_connection == 'pgsql') {
-                $link = @pg_connect("host=" . $db_host . " dbname=" . $db_database . " user=" . $db_username . " password=" . $db_password. " port=" . $db_port);
+                $link = @pg_connect("host=" . $db_host . " dbname=" . $db_database . " user=" . $db_username . " password=" . $db_password . " port=" . $db_port);
             } else {
-                $link = @mysqli_connect($db_host, $db_username, $db_password, $db_database, (int) $db_port);
+                $link = @mysqli_connect($db_host, $db_username, $db_password, $db_database, (int)$db_port);
             }
         } catch (\Exception $e) {
             return false;
@@ -199,7 +199,6 @@ class InstallRepository
             }
         }
 
-        
 
         return true;
     }
@@ -298,14 +297,14 @@ class InstallRepository
     public function install($params)
     {
 
-        if($this->migrateDB()){
+        if ($this->migrateDB()) {
             $ac = Storage::exists('.temp_app_installed') ? Storage::get('.temp_app_installed') : null;
             Storage::put('.app_installed', $ac);
             Storage::put('.user_email', gv($params, 'email'));
             Storage::put('.user_pass', gv($params, 'password'));
-    
+
             Storage::delete('.temp_app_installed');
-        } else{
+        } else {
             throw ValidationException::withMessages(['message' => 'There is something wrong in migration. Please contact with script author.']);
         }
     }
@@ -330,11 +329,11 @@ class InstallRepository
         DB::disconnect('mysql');
 
         config([
-            'database.connections.'.$db_connection.'.host' => gv($params, 'db_host', 'localhost'),
-            'database.connections.'.$db_connection.'.port' => gv($params, 'db_port', 3306),
-            'database.connections.'.$db_connection.'.database' => gv($params, 'db_database'),
-            'database.connections.'.$db_connection.'.username' => gv($params, 'db_username'),
-            'database.connections.'.$db_connection.'.password' => gv($params, 'db_password'),
+            'database.connections.' . $db_connection . '.host' => gv($params, 'db_host', 'localhost'),
+            'database.connections.' . $db_connection . '.port' => gv($params, 'db_port', 3306),
+            'database.connections.' . $db_connection . '.database' => gv($params, 'db_database'),
+            'database.connections.' . $db_connection . '.username' => gv($params, 'db_username'),
+            'database.connections.' . $db_connection . '.password' => gv($params, 'db_password'),
         ]);
 
         DB::setDefaultConnection($db_connection);
@@ -380,7 +379,6 @@ class InstallRepository
 
     public function installModule($params)
     {
-
         $code = gv($params, 'purchase_code');
         $name = gv($params, 'name');
         $e = gv($params, 'envatouser');
@@ -410,14 +408,52 @@ class InstallRepository
 
         $verifier = $array[$name]['verifier'] ?? 'auth';
 
-        $url = verifyUrl($verifier) . '/api/cc?a=install&u=' . app_url() . '&ac=' . $code . '&i=' . $item_id . '&e=' . $e . '&t=Module&ve=' . $ve;
+        $url = verifyUrl($verifier) . '/api/cc?a=install&u=' . app_url() . '&ac=' . $code . '&i=' . $item_id . '&e=' . $e . '&t=Module&ve=' . $ve . '&name=' . $name . '&row=' . $row . '&file=' . $file.'&current='.str_replace(url('/').'/', '', url()->previous());
 
         $response = curlIt($url);
 
+        if ($goto = gv($response, 'goto')) {
+
+            if (request()->wantsJson()) {
+                return $response;
+            }
+
+            return redirect($goto)->send();
+
+
+        }
+
         $status = gbv($response, 'status');
+        if ($status) {
+
+            return $this->processModuleInstallation($params, $response);
+        }
+
+        $this->disableModule($name, $row, $file);
+        if (request()->wantsJson()) {
+            throw ValidationException::withMessages(['message' => gv($response, 'message', 'Something is not right')]);
+        }
+        Toastr::error(gv($response, 'message', 'Something is not right'));
+        return false;
+
+
+    }
+
+    public function processModuleInstallation($params, $response)
+    {
+        $row = gbv($params, 'row');
+        $file = gbv($params, 'file');
+        $name = gv($params, 'name');
+        $code = gv($params, 'purchase_code', gv($params, 'ac'));
+        $e = gv($params, 'envatouser', gv($params, 'e'));
+
+        $dataPath = base_path('Modules/' . $name . '/' . $name . '.json');
+
+        $strJsonFileContents = file_get_contents($dataPath);
+        $array = json_decode($strJsonFileContents, true);
 
         if (!$row) {
-            if (gbv($params, 'file')) {
+            if ($file) {
                 app('general_settings')->put([
                     $name => 0
                 ]);
@@ -434,70 +470,62 @@ class InstallRepository
             $config = $settings_model->firstOrCreate(['key' => $name]);
         }
 
-        if ($status) {
 
-            // added a new column in sm general settings
-            try {
+        // added a new column in sm general settings
+        try {
 
-                $version = $array[$name]['versions'][0];
-                $url = $array[$name]['url'][0];
-                $notes = $array[$name]['notes'][0];
+            $version = $array[$name]['versions'][0];
+            $url = $array[$name]['url'][0];
+            $notes = $array[$name]['notes'][0];
 
-                DB::beginTransaction();
-                $module_class_name = config('spondonit.module_manager_model');
-                $moduel_class = new $module_class_name;
-                $s = $moduel_class->where('name', $name)->first();
-                if (empty($s)) {
-                    $s = $moduel_class;
-                }
-                $s->name = $name;
-                $s->email = $e;
-                $s->notes = $notes;
-                $s->version = $version;
-                $s->update_url = $url;
-                $s->installed_domain = app_url();
-                $s->activated_date = date('Y-m-d');
-                $s->purchase_code = $code;
-                $s->checksum = gv($response, 'checksum');
-                $r = $s->save();
-
-                $settings_model_name = config('spondonit.settings_model');
-                $settings_model = new $settings_model_name;
-                if ($row) {
-                    $config = $settings_model->firstOrNew(['key' => $name]);
-                    $config->value = 1;
-                    $config->save();
-                } else if ($file) {
-                    app('general_settings')->put([
-                        $name => 1
-                    ]);
-                } else {
-                    $config = $settings_model->find(1);
-                    $config->$name = 1;
-                    $config->save();
-                }
-
-                DB::commit();
-
-
-                return true;
-            } catch (Exception $e) {
-                Log::error($e);
-                $this->disableModule($name, $row, $file);
-                if (request()->wantsJson()) {
-                    throw ValidationException::withMessages(['message' => $e->getMessage()]);
-                }
-                Toastr::error($e->getMessage());
-                return false;
+            DB::beginTransaction();
+            $module_class_name = config('spondonit.module_manager_model');
+            $moduel_class = new $module_class_name;
+            $s = $moduel_class->where('name', $name)->first();
+            if (empty($s)) {
+                $s = $moduel_class;
             }
-        } else {
-            $this->disableModule($name, $row);
+            $s->name = $name;
+            $s->email = $e;
+            $s->notes = $notes;
+            $s->version = $version;
+            $s->update_url = $url;
+            $s->installed_domain = app_url();
+            $s->activated_date = date('Y-m-d');
+            $s->purchase_code = $code;
+            $s->checksum = gv($response, 'checksum');
+            $r = $s->save();
+
+            $settings_model_name = config('spondonit.settings_model');
+            $settings_model = new $settings_model_name;
+            if ($row) {
+                $config = $settings_model->firstOrNew(['key' => $name]);
+                $config->value = 1;
+                $config->save();
+            } else if ($file) {
+                app('general_settings')->put([
+                    $name => 1
+                ]);
+            } else {
+                $config = $settings_model->find(1);
+                $config->$name = 1;
+                $config->save();
+            }
+
+            DB::commit();
+
+
+            return true;
+        } catch (Exception $e) {
+            Log::error($e);
+            $this->disableModule($name, $row, $file);
             if (request()->wantsJson()) {
-                throw ValidationException::withMessages(['message' => gv($response, 'message', 'Something is not right')]);
+                throw ValidationException::withMessages(['message' => $e->getMessage()]);
             }
-            Toastr::error(gv($response, 'message', 'Something is not right'));
+            Toastr::error($e->getMessage());
             return false;
         }
+
     }
 
     protected function disableModule($module_name, $row = false, $file = false)

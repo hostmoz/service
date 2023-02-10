@@ -122,12 +122,21 @@ class InstallController extends Controller{
      public function ManageAddOnsValidation(ModuleInstallRequest $request){
         $response = $this->repo->installModule($request->all());
         if($response){
-            if($request->wantsJson()){
-                return response()->json(['message' => __('service::install.module_verify'), 'reload' => true]);
+            if(gv($response, 'goto')){
+                $message = __('Please wait to verify the license. Thank you.');
+                $goto = $response['goto'];
+                if ($request->wantsJson()) {
+                    return response()->json(['message' => $message, 'goto' => $goto]);
+                }
+            } else {
+                if ($request->wantsJson()) {
+                    return response()->json(['message' => __('service::install.module_verify'), 'reload' => true]);
+                }
+                Toastr::success(__('service::install.module_verify'), 'Success');
             }
-            Toastr::success(__('service::install.module_verify'), 'Success');
         }
-         return back();
+        
+        return back();
 
     }
 
