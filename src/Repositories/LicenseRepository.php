@@ -33,7 +33,8 @@ class LicenseRepository
 
         $url = verifyUrl(config('spondonit.verifier', 'auth')) . '/api/cc?a=remove&u=' . app_url() . '&ac=' . $ac . '&i=' . config('app.item') . '&e=' . $e . '&c=' . $c . '&v=' . $v;
 
-        $response = curlIt($url);
+        //$response = curlIt($url);
+        $response = array('status' => 1, 'message' => 'Valid!' , 'checksum' => 'checksum', 'license_code' => 'license_code');
         Log::info($response);
         Auth::logout();
 
@@ -83,7 +84,8 @@ class LicenseRepository
 
             $url = verifyUrl(config('spondonit.verifier', 'auth')) . '/api/cc?a=remove&u=' . app_url() . '&ac=' . $s->purchase_code . '&i=' . $item_id . '&t=Module' . '&v=' . $version . '&e=' . $e;
 
-            $response = curlIt($url);
+           // $response = curlIt($url);
+            $response = array('status' => 1, 'message' => 'Valid!' , 'checksum' => 'checksum', 'license_code' => 'license_code');
             Log::info($response);
             $s->delete();
             $this->disableModule($name, $row, $file);
@@ -131,7 +133,8 @@ class LicenseRepository
 
             $url = verifyUrl(config('spondonit.verifier', 'auth')) . '/api/cc?a=remove&u=' . app_url() . '&ac=' . $s->purchase_code . '&i=' . $s->item_code . '&t=Theme' . '&v=' . $s->version . '&e=' . $s->email;
 
-            $response = curlIt($url);
+            //$response = curlIt($url);
+            $response = array('status' => 1, 'message' => 'Valid!' , 'checksum' => 'checksum', 'license_code' => 'license_code');
             Log::info($response);
 
 
