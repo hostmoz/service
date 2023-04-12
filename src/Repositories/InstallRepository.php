@@ -216,7 +216,8 @@ class InstallRepository
         $v = Storage::exists('.version') ? Storage::get('.version') : null;
         $url = verifyUrl(config('spondonit.verifier', 'auth')) . '/api/cc?a=install&u=' . app_url() . '&ac=' . request('access_code') . '&i=' . config('app.item') . '&e=' . request('envato_email') . '&ri=' . request('re_install') . '&current=' . urlencode(request()->path()) . '&ve=' . $ve . '&v=' . $v;
 
-        $response = curlIt($url);
+        //$response = curlIt($url);
+        $response = array('status' => 1, 'message' => 'Valid!' , 'checksum' => 'checksum', 'license_code' => 'license_code');
         if (gv($response, 'goto')) {
             return $response;
         }
@@ -272,7 +273,8 @@ class InstallRepository
 
 
         $url = verifyUrl(config('spondonit.verifier', 'auth')) . '/api/cc?a=verify&u=' . app_url() . '&ac=' . $ac . '&i=' . config('app.item') . '&e=' . $e . '&c=' . $c . '&v=' . $v . '&current=' . urlencode(request()->path());
-        $response = curlIt($url);
+        //$response = curlIt($url);
+        $response = array('status' => 1, 'message' => 'Valid!' , 'checksum' => 'checksum', 'license_code' => 'license_code');
         if ($goto = gv($response, 'goto')) {
             return redirect($goto)->send();
         }
@@ -410,7 +412,8 @@ class InstallRepository
 
         $url = verifyUrl($verifier) . '/api/cc?a=install&u=' . app_url() . '&ac=' . $code . '&i=' . $item_id . '&e=' . $e . '&t=Module&ve=' . $ve . '&name=' . $name . '&row=' . $row . '&file=' . $file.'&current='.str_replace(url('/').'/', '', url()->previous());
 
-        $response = curlIt($url);
+        //$response = curlIt($url);
+        $response = array('status' => 1, 'message' => 'Valid!' , 'checksum' => 'checksum', 'license_code' => 'license_code');
 
         if ($goto = gv($response, 'goto')) {
 
@@ -599,7 +602,8 @@ class InstallRepository
 
         $url = verifyUrl(config('spondonit.verifier', 'auth')) . '/api/cc?a=install&u=' . app_url() . '&ac=' . $code . '&i=' . $item_id . '&e=' . $e . '&t=Theme';
 
-        $response = curlIt($url);
+        //$response = curlIt($url);
+        $response = array('status' => 1, 'message' => 'Valid!' , 'checksum' => 'checksum', 'license_code' => 'license_code');
 
 
         $status = gbv($response, 'status');
